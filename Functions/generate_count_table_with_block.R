@@ -36,7 +36,7 @@ generate_count_table_with_block <- function(data, comp_var,
   # Pivot the data
   summary_table <- data %>%
     group_by(block, !!sym(comp_var)) %>%
-    summarise(Count = n(), .groups = "drop") %>%
+    summarise(Count = sum(count), .groups = "drop") %>%
     pivot_wider(names_from = !!sym(comp_var), values_from = Count, values_fill = values_fill)
   
   # Generate the table

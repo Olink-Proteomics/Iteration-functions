@@ -1,5 +1,5 @@
 
-#' regression_plot: Create and optionally save a regression scatter plot
+#' generate_regression_plot: Create and optionally save a regression scatter plot
 #'
 #' This function creates a regression scatter plot between two variables using a specified dataset. 
 #' It allows customization of plot aesthetics such as base font size and file format, and includes 
@@ -19,7 +19,7 @@
 #'
 #' @examples
 #' # Example usage without saving
-#' regression_plot(
+#' generate_regression_plot(
 #'   data = illumina_diverse,
 #'   x_var = "Z0008",
 #'   y_var = "Z0013",
@@ -29,7 +29,7 @@
 #' )
 #'
 #' # Example usage with saving as PDF
-#' regression_plot(
+#' generate_regression_plot(
 #'   data = both,
 #'   x_var="Ultima",  reg_var = "log2count", wide_var="Instrument", output_path = "Results/Ultima/exp.png", base_size=30,file_format="png",
 #'   y_var= "Illumina",
@@ -39,8 +39,8 @@
 #'   base_size = 16,
 #'   file_format = "pdf"
 #' )
-regression_plot <- function(data, x_var, y_var, reg_var, wide_var, output_path = NULL, 
-                            base_size = 30, file_format = "png") {
+generate_regression_plot <- function(data, x_var, y_var, reg_var, wide_var, output_path = NULL, 
+                            base_size = 12, file_format = "png") {
   
   # Prepare the data by pivoting to wide format
   temp <- data %>%
@@ -48,17 +48,18 @@ regression_plot <- function(data, x_var, y_var, reg_var, wide_var, output_path =
       !!rlang::sym(wide_var), 
       block, 
       sample_index, 
+      sample_type,
       plate_id, 
       !!rlang::sym(reg_var), 
-      assay
+      olink_id,
     ) %>%
     pivot_wider(names_from = !!rlang::sym(wide_var), values_from = !!rlang::sym(reg_var)) %>%
     filter(!is.na(.data[[x_var]]) & !is.na(.data[[y_var]]))
   
   # Create the regression plot
   regression_plot <- temp %>% 
-    ggplot(aes_string(y = y_var, x = x_var, color = "block")) +
-    geom_point(size = 3, alpha = 0.5, na.rm = TRUE) +
+    ggplot(aes_string(y = y_var, x = x_var, color = "sample_type")) +
+    geom_point(size = 1, alpha = 0.5, na.rm = TRUE) +
     geom_smooth(aes(color = NULL), se = TRUE, method = "lm", formula = y ~ x,
                 na.rm = TRUE, level = 0.95, color = "Black") +
     theme_tufte(base_size = base_size, base_family = "serif", ticks = TRUE) +
@@ -73,7 +74,7 @@ regression_plot <- function(data, x_var, y_var, reg_var, wide_var, output_path =
   } else {
     # Save the plot based on the file format
     if (file_format == "png") {
-      ggsave(output_path, plot = regression_plot, width = 16, height = 16, bg = "white", dpi = 300)
+      ggsave(output_path, plot = regression_plot, width = 10, height = 10, bg = "white", dpi = 300)
     } else if (file_format == "pdf") {
       ggsave(output_path, plot = regression_plot, width = 16, height = 16, device = cairo_pdf)
     } else {

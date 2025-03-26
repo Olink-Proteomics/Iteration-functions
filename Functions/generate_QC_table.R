@@ -5,7 +5,7 @@
 #'
 #' @param data A data frame containing the input data.
 #' @param compare_by A string specifying the column in the data frame to use for comparison (e.g., "Instrument", "run_id").
-#' @param compare_levels A character vector of levels to include from the `compare_by` column.
+#' @param compare_levels A character vector of levels to include from the `compare_by` column. Default is all unique levels in the data.
 #' @param sample_type_filter A string to filter rows in the `sample_type` column (default: "SAMPLE").
 #' @param qc_var A string specifying the column to use for identifying samples (default: "sample_id").
 #' @param qc_col A string specifying the column containing QC statuses (default: "sample_qc").
@@ -28,7 +28,7 @@
 #' generate_qc_table(data = both0, compare_by = "factor_x", compare_levels = c("Factor1", "Factor2"),
 #'                   qc_var = "sample_id", qc_col = "sample_qc", caption = "QC Status by Factor X")
 #'
-generate_qc_table <- function(data, compare_by, compare_levels, sample_type_filter = "SAMPLE", qc_var = "sample_id", qc_col = "sample_qc", 
+generate_qc_table <- function(data, compare_by, compare_levels = NULL, sample_type_filter = "SAMPLE", qc_var = "sample_id", qc_col = "sample_qc", 
                               caption = "QC Status of Samples", font_size = 10, format = "latex") {
   # Validate inputs
   if (!(compare_by %in% colnames(data))) {
@@ -41,6 +41,12 @@ generate_qc_table <- function(data, compare_by, compare_levels, sample_type_filt
   
   if (!(qc_var %in% colnames(data))) {
     stop(paste("The QC variable", qc_var, "does not exist in the data frame."))
+  }
+  
+  
+  # If compare_levels is NULL, use all unique levels from compare_by
+  if (is.null(compare_levels)) {
+    compare_levels <- unique(data[[compare_by]])
   }
   
   # Ensure all specified levels are present in the data
@@ -68,13 +74,13 @@ generate_qc_table <- function(data, compare_by, compare_levels, sample_type_filt
   header_labels <- c(" " = 2, setNames(rep(length(qc_statuses), length(compare_levels)), compare_levels))
   
   # Generate and format the table
-  table <- kable(summary_table, format = format, caption = caption, col.names = col_names) %>%
+  table <- kbl(summary_table, format = format, caption = caption, col.names = col_names, position = "!h") %>%
     kable_classic(full_width = FALSE) %>%
     add_header_above(header_labels)
   
   # Add font size to the table
   if (!is.null(font_size)) {
-    table <- kable_styling(table, latex_options = c("scale_down"), font_size = font_size)
+    table <- kable_styling(table, font_size = font_size)
   }
   
   return(table)

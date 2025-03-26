@@ -30,7 +30,7 @@
 
 #' @examples
 
-#' # Assuming `regression_plot` is defined and `ultima_diverse` is your dataset
+#' # Assuming `generate_regression_plot` is defined and `ultima_diverse` is your dataset
 
 #' output_directory <- "path/to/output/folder"
 
@@ -122,7 +122,7 @@ generate_all_regression_plots <- function(data, reg_var, wide_var, output_dir = 
     
     # Generate the regression plot (and save if output_path is provided)
     
-    plot <- regression_plot(data, 
+    plot <- generate_regression_plot(data, 
                             
                             x_var = x_var, 
                             

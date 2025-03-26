@@ -1,18 +1,20 @@
 
-
 #' Perform per assay Correlation Analysis Between Comparison Pairs
 #'
 #' This function calculates correlations between specified comparison pairs 
 #' (e.g., runs, instruments, or other factors) and summarizes the results. 
-#' It supports optional filtering by `sample_type`, `assay_type`, and additional 
-#' custom conditions.
+#' It supports optional filtering by `sample_type` and `assay_type`. If 
+#' `comparison_pairs` is not provided, the function automatically generates all 
+#' pairwise combinations of the unique values in the `comparison_column`.
 #'
 #' @param data A data frame containing the input data for correlation analysis. 
 #'   The data frame should include columns for the `comparison_column`, `value_column`, 
-#'   and any other relevant metadata such as `sample_type`, `assay_type`, and `LOD`.
-#' @param comparison_pairs A list of named pairs specifying the comparisons 
+#'   and any other relevant metadata such as `sample_type`, `assay_type`, and `plate_id`.
+#' @param comparison_pairs Optional. A list of named pairs specifying the comparisons 
 #'   (e.g., runs or instruments) to be analyzed. Each pair should be a list 
-#'   with elements `comp1` and `comp2` representing the names of the comparison factors.
+#'   with elements `comp1` and `comp2` representing the names of the comparison factors. 
+#'   If `NULL`, the function will generate all pairwise combinations of the unique values 
+#'   in the `comparison_column`.
 #' @param value_column A string specifying the column name in the data frame 
 #'   that contains the values for correlation (e.g., `"NPX"`).
 #' @param comparison_column A string specifying the column name that identifies 
@@ -21,8 +23,6 @@
 #'   to filter the data. Use `NULL` to skip filtering by `sample_type`.
 #' @param filter_assay_type Optional. A string specifying a value of `assay_type` 
 #'   to filter the data. Use `NULL` to skip filtering by `assay_type`.
-#' @param additional_filter Optional. A string specifying a custom filter condition 
-#'   (e.g., `"NPX > LOD"` or `"NPX > 10"`). Use `NULL` to skip additional filtering.
 #'
 #' @return A list with two components:
 #' \item{results_list}{A list of data frames, each containing the correlation results 
@@ -31,6 +31,10 @@
 #' \item{summary}{A data frame summarizing the correlations for each comparison pair 
 #'   by block, including the minimum, first quartile, mean, median, third quartile, 
 #'   and maximum correlation estimates.}
+#'
+#' @details The function handles cases where insufficient observations are available 
+#'   for correlation by skipping those pairs or blocks. The correlation results 
+#'   are adjusted for multiple testing using the Benjamini-Hochberg method.
 #'
 #' @examples
 #' # Example with run pairs and filters
@@ -44,36 +48,31 @@
 #'   value_column = "NPX",
 #'   comparison_column = "run_id",
 #'   filter_sample_type = "SAMPLE",
-#'   filter_assay_type = "assay",
-#'   additional_filter = "NPX > LOD"
+#'   filter_assay_type = "assay"
 #' )
 #'
-#' # Example with instruments and no additional filter
-#' instrument_pairs <- list(
-#'   list(comp1 = "Instrument1", comp2 = "Instrument2")
-#' )
+#' # Example with automatic generation of comparison pairs
 #' result <- correlation_analysis(
 #'   data = my_data,
-#'   comparison_pairs = instrument_pairs,
 #'   value_column = "NPX",
 #'   comparison_column = "instrument"
 #' )
 #'
 #' @export
-correlation_analysis
 
-correlation_analysis <- function(data, 
-                                 comparison_pairs, 
+correlation_function <- function(data, 
+                                 comparison_pairs = NULL, 
                                  value_column, 
                                  comparison_column, 
                                  filter_sample_type = NULL, 
-                                 filter_assay_type = NULL, 
-                                 additional_filter = NULL) {
+                                 filter_assay_type = NULL) {
   cor_results_list <- list()
   
-  # Ensure `comparison_pairs` is always a list of named pairs
-  if (!is.list(comparison_pairs)) {
-    comparison_pairs <- list(comparison_pairs)
+  # Generate all combinations of the comparison column if `comparison_pairs` is NULL
+  if (is.null(comparison_pairs)) {
+    unique_comparisons <- unique(data[[comparison_column]])
+    comparison_pairs <- combn(unique_comparisons, 2, simplify = FALSE)
+    comparison_pairs <- lapply(comparison_pairs, function(x) list(comp1 = x[1], comp2 = x[2]))
   }
   
   # Optionally filter data by `sample_type` and `assay_type`
@@ -82,11 +81,6 @@ correlation_analysis <- function(data,
   }
   if (!is.null(filter_assay_type)) {
     data <- data %>% filter(assay_type == filter_assay_type)
-  }
-  
-  # Optionally apply an additional custom filter
-  if (!is.null(additional_filter)) {
-    data <- data %>% filter(!!rlang::parse_expr(additional_filter))
   }
   
   # Loop through each pair of comparison factors
@@ -100,11 +94,11 @@ correlation_analysis <- function(data,
       select(run_id = !!sym(comparison_column), 
              sample_index, 
              assay, 
-             block, 
              olink_id, 
              plate_id, 
+             block, 
              !!sym(value_column)) %>%
-      group_by(sample_index, assay, block, olink_id, plate_id) %>%
+      group_by(sample_index, assay, olink_id, plate_id, block) %>%
       spread(run_id, !!sym(value_column)) %>%
       ungroup()
     
@@ -120,18 +114,23 @@ correlation_analysis <- function(data,
       olink_id_data <- all_counts_cor %>% filter(olink_id == a)
       
       for (p in olink_id_data %>% distinct(plate_id) %>% pull(plate_id)) {
-        olink_id_p_data <- olink_id_data %>% filter(plate_id == p)
+        block_data <- olink_id_data %>% filter(plate_id == p)
         
-        for (b in unique(olink_id_p_data$block)) {
-          block_data <- olink_id_p_data %>% filter(block == b)
+        # Filter for finite values in both comparison columns
+        block_data <- block_data %>%
+          filter(is.finite(!!sym(comp1)) & is.finite(!!sym(comp2)))
+        
+        # Ensure there are at least two finite observations
+        if (nrow(block_data) > 1) {
+          test <- tryCatch({
+            cor.test(block_data[[comp1]], block_data[[comp2]])
+          }, error = function(e) NULL)
           
-          if (nrow(block_data) > 1) { # Ensure there are enough rows for correlation
-            test <- cor.test(block_data[[comp1]], block_data[[comp2]])
-            
+          if (!is.null(test)) {
             cor_result_aq <- data.frame(
               olink_id = a,
               Plate = p,
-              block = b,
+              block = block_data$block[1], # Assuming one block per olink_id
               estimate = test$estimate,
               p_value = test$p.value
             )
@@ -165,6 +164,7 @@ correlation_analysis <- function(data,
       Max = max(estimate, na.rm = TRUE),
       .groups = "drop"
     ) %>%
+    arrange(block) %>% # Sort by block
     mutate(across(where(is.numeric), ~ round(., digits = 2)))
   
   return(list(
