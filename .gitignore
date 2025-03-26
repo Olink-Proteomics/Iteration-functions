@@ -47,3 +47,14 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+#all log and pdf files
+*.log
+*.pdf
+
+#data files
+*.rds
+*.Rdata
+#texfiles
+
+*.tex

@@ -51,7 +51,7 @@
 #' print(results$plot)
 #'
 #' @export
-generate_cv_summary <- function(df, value_col, comp_var = NULL, npx, threshold, sample_type = "SAMPLE_CONTROL",
+generate_cv_summary <- function(df, value_col, comp_var = NULL, npx, threshold, filter_col = "sample_type", filter_value = "SAMPLE_CONTROL",
                                 group_vars = "block", pivot_var = NULL, caption, 
                                 format = "latex", longtable = TRUE, booktabs = TRUE, fontsize = 12,
                                 plot = FALSE) {
@@ -64,14 +64,14 @@ generate_cv_summary <- function(df, value_col, comp_var = NULL, npx, threshold, 
   cv_data <- switch(value_col,
                     "intra_CV" = {
                       if (is.null(comp_var)) stop("comp_var must be specified for intra-plate CV.")
-                      calculate_intra_plate_cv(df, comp_var = comp_var, npx = npx, threshold = threshold, sample_type = sample_type)
+                      calculate_intra_plate_cv(df, comp_var = comp_var, npx = npx, threshold = threshold,filter_col=filter_col, filter_value = filter_value)
                     },
                     "inter_plate_CV" = {
                       if (is.null(comp_var)) stop("comp_var must be specified for inter-plate CV.")
-                      calculate_inter_plate_cv(df, comp_var = comp_var, npx = npx, threshold = threshold, sample_type = sample_type)
+                      calculate_inter_plate_cv(df, comp_var = comp_var, npx = npx, threshold = threshold, filter_col=filter_col, filter_value = filter_value)
                     },
                     "inter_run_CV" = {
-                      calculate_inter_run_cv(df, npx = npx, threshold = threshold, sample_type = sample_type, comp_var = comp_var)
+                      calculate_inter_run_cv(df, npx = npx, threshold = threshold, filter_col=filter_col, filter_value = filter_value, comp_var = comp_var)
                     }
   )
   

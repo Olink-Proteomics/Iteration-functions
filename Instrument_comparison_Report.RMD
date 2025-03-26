@@ -305,7 +305,6 @@ cv<-generate_cv_summary(
     comp_var = parameters$run_var,
     npx = parameters$npx_var,
     threshold = parameters$Background,
-    sample_type = "SAMPLE_CONTROL",
     group_vars = c(parameters$run_var, "plate_id", "block"),
     pivot_var = parameters$run_var,
     value_col = "intra_CV",
@@ -324,7 +323,6 @@ cv<-generate_cv_summary(
     comp_var = parameters$run_var,
     npx = parameters$npx_var,
     threshold =  parameters$Background,
-    sample_type = "SAMPLE_CONTROL",
     group_vars = c(parameters$run_var, "plate_id", "block"),
     pivot_var = parameters$run_var,
     value_col = "inter_plate_CV",
@@ -346,7 +344,6 @@ cv<-generate_cv_summary(
   comp_var = parameters$run_var, 
   npx = parameters$npx_var, 
   threshold = parameters$Background, 
-  sample_type = "SAMPLE_CONTROL",
   group_vars = "block",
   caption="Inter-instrument CV per block", 
   format ="latex") 

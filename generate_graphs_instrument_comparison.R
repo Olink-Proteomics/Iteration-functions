@@ -186,14 +186,14 @@ ggsave(
 
 #Generate CV regression plots
 
-cv_data <-  calculate_intra_plate_cv(yourdata, comp_var = parameters$run_var, npx = parameters$npx_var, threshold = parameters$Background, sample_type = "SAMPLE_CONTROL") 
+cv_data <-  calculate_intra_plate_cv(yourdata, comp_var = parameters$run_var, npx = parameters$npx_var, threshold = parameters$Background, filter_col = "sample_type", filter_value = "SAMPLE_CONTROL") 
 
 generate_simple_regression_plot(cv_data,reg_var = "intra_CV", wide_var = parameters$run_var, group = "block", uniqueID = "olink_id", additional_vars =  c("block", "plate_id"),
                                 output_path = file.path(output_dir, paste0("intra_CV_regression_SC.", plot_settings$format)))
 
 
 
-cv_data <-  calculate_inter_plate_cv(yourdata, comp_var = parameters$run_var, npx = parameters$npx_var, threshold = parameters$Background, sample_type = "SAMPLE_CONTROL") 
+cv_data <-  calculate_inter_plate_cv(yourdata, comp_var = parameters$run_var, npx = parameters$npx_var, threshold = parameters$Background) 
 
 generate_simple_regression_plot(cv_data,reg_var = "inter_plate_CV", wide_var = parameters$run_var, group = "block", uniqueID = "olink_id",additional_vars = "block",
                                 output_path = file.path(output_dir, paste0("inter_plate_CV_regression_SC.", plot_settings$format)))
@@ -206,7 +206,6 @@ intracv<- generate_cv_summary(
   comp_var = parameters$run_var,
   npx = parameters$npx_var,
   threshold = parameters$Background,
-  sample_type = "SAMPLE_CONTROL",
   group_vars = c(parameters$run_var, "plate_id", "block"),
   pivot_var = parameters$run_var,
   value_col = "intra_CV",
@@ -230,7 +229,6 @@ intercv<- generate_cv_summary(
   comp_var = parameters$run_var,
   npx = parameters$npx_var,
   threshold = parameters$Background,
-  sample_type = "SAMPLE_CONTROL",
   group_vars = c(parameters$run_var, "plate_id", "block"),
   pivot_var = parameters$run_var,
   value_col = "inter_plate_CV",
@@ -258,7 +256,7 @@ detectability_list <- list()
 
 for (run_id in run_ids) {
   detectability <- calculate_detectability(
-    df = filter(yourdata, !!sym(run_var) == !!run_id),
+    df = filter(yourdata, !!sym(parameters$run_var) == !!run_id),
     sample_name = "sample_name",
     npx = parameters$npx_var,
     background = parameters$Background,
