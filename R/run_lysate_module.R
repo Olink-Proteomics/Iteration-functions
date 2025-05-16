@@ -1,31 +1,30 @@
-# HS, 120220205
+# HS, 202020205
 ######################
 #
 # Source required libraries and functions
-source("mylib.R")
-sapply(list.files("Functions", pattern = "\\.R$", full.names = TRUE), source)
+sapply(list.files("../functions", pattern = "\\.R$", full.names = TRUE), source)
 
 # Load configuration
-config <- yaml::read_yaml("config_product.yml")
+config <- yaml::read_yaml("../config/config_product.yml")
 
 #generate graphs
 cat("\nGenerating graphics...\n")
-source("generate_graphs_product_comparison.R")
+source("generate_graphslysate.R")
 
-report_filename <- paste0("Product_comparison_Report_", parameters$Product, ".pdf")
+report_filename <- paste0("Lysate_module_Report_", parameters$Product, ".pdf")
 
 #generate the report
 
 cat(paste("\nRendering the PDF report and saving as", report_filename, "...\n"))
 rmarkdown::render(
-  input = "Product_comparison_Report.rmd", 
+  input = "../RMD/lysate_module_Report.rmd", 
   params = config, 
   output_file = report_filename,
   output_format = "pdf_document"
 )
 
 
-cat(paste0("\nReport for Project '", parameters$Project, "' saved as: ", report_filename, "\n"))
+cat(paste0("\nReport for lysate module saved as: ", report_filename, "\n"))
 cat("\nAll tasks completed successfully!\n")
 
 

@@ -1,13 +1,13 @@
-input_data: "my_data.rds"          # Input data file path
+input_data: "NPX data/Lysate_runs.rds"          # Input data file path
 
 
 parameters:
-  Product: "ProjectA"
-  Instrument: "instrumentB"
-  run_var: "run_id"                      # Column for comparing
-  Project: "Iteration runs Mars 2025"    # where does the data come from
-  Background: "detection"  #eob var
-  matrix_column: "matrix_name"
+  Product: "Maximus"
+  Instrument: "Lysate"
+  run_var: "Product"                      # Column for comparing
+  Project: "Pre-iteration 2 runs April 2025"    # where does the data come from
+  Background: "lod_in_npx"  
+  matrix_column: "sample_subtype"
   npx_var: "pc_normalized_npx"
 
   

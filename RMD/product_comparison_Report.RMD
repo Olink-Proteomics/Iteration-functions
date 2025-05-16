@@ -7,8 +7,8 @@ output:
     latex_engine: xelatex
     keep_tex: true
     includes:
-      in_header: olink_style_windows.tex
-      before_body: olink_title_style_internal_projects.tex
+      in_header: templates/olink_style_windows.tex
+      before_body: templates/olink_title_style_internal_projects.tex
   html_document:
     df_print: paged
 fontsize: 12pt
@@ -28,7 +28,7 @@ knitr::opts_chunk$set(message = F)
 knitr::opts_chunk$set(fig.pos = 'H',tab.pos = "H", out.extra = "")
 knitr::opts_knit$set(eval.after = "fig.cap")
 
-source("mylib.R")
+source("Rcode/mylib.R")
 sapply(list.files("Functions", pattern ="\\.R$", full.names = TRUE), source)
 
 loadfonts(device = "win")
@@ -51,15 +51,14 @@ plot_settings <- config$plot_settings
 # Output directory
 product_name <- parameters$Product
 project_name <- parameters$Project
+background <- parameters$Background
 output_dir <- file.path("Results", product_name, "Product_comparison")
 outliers<-c()
-yourdata <- arrow::read_parquet(input_data) %>% mutate(NPX= !!rlang::sym(parameters$npx_var)) %>% 
-filter(sample_qc=="PASS", !(sample_id %in% outliers))                                           
-#yourdata <- readRDS(input_data)
+yourdata <- read_rds(input_data) %>% mutate(NPX= !!rlang::sym(parameters$npx_var)) %>% # some olink_analyse functions need NPX
+filter(sample_qc=="PASS", !(sample_id %in% outliers))                                  
 Concordance_count_npx_above_background<-read_rds("Concordance_count_npx_above_background.rds")
 Concordance_count_npx<-read_rds("Concordance_count_npx.rds")
-matrix_types <- unique(yourdata[[as.character(sym(parameters$matrix_column))]] )
-
+matrix_types <- unique((yourdata %>% filter(sample_type=="SAMPLE"))[[as.character(sym(parameters$matrix_column))]] )
 
 
 ```
@@ -70,6 +69,7 @@ matrix_types <- unique(yourdata[[as.character(sym(parameters$matrix_column))]] )
 
 Product :  `r product_name`   
 Project: `r project_name`   
+Background: `r background`
 
 <!-- \newpage -->
 
@@ -123,8 +123,7 @@ NPX_cor <- correlation_function(
 \subsection{Median of the differences in CV}
 
 ```{r}
-cv_data<-aggregate_cv(yourdata, "NPX", parameters$Background, comp_var="run_id", filter_value =  "SAMPLE_CONTROL", additionnal_var=parameters$run_var) %>% 
-  group_by(!!sym(parameters$run_var),plate_id, olink_id)
+cv_data<-aggregate_cv(yourdata, "NPX", parameters$Background, comp_var="run_id", filter_value =  "SAMPLE_CONTROL", additionnal_var=parameters$run_var) 
 
 inter<-compute_median_diff(cv_data,"Product","inter_plate_CV")
 intra<- compute_median_diff(cv_data,"Product","intra_CV")
@@ -142,15 +141,13 @@ intra<- compute_median_diff(cv_data,"Product","intra_CV")
 
 ```{r}
 detectability_data<-aggregate_detectability(
-    df = yourdata,
+    df = filter(yourdata,sample_qc=="PASS", !(sample_id%in% outliers), sample_label=="concordance"),
     sample_name = "sample_name",
     comp_var = parameters$run_var,
     run_var = "run_id",
     npx = parameters$npx_var,
     background = parameters$Background,
-    matrix_name = "matrix",
-    matrix = "Plasma"
-  )
+    )
 
 detect<-compute_median_diff(detectability_data,"Product","Detectability")
 ```
@@ -173,6 +170,48 @@ detect<-compute_median_diff(detectability_data,"Product","Detectability")
   cat("![Sample-wise NPX distribution](", output_dir, "/distplot.", plot_settings$format, "){width=100%}",sep="")
 
 ```
+
+
+
+\newpage
+\section{Count distribution within categories, based only on concordance samples}
+
+Only overlapping assays are included below
+
+
+```{r}
+
+result<- descriptive_tabulation(filter(yourdata %>% filter(!is.na(ht_oid)), sample_label=="concordance"),parameters$run_var)
+
+result$count_categ_table %>% kbl(position = "!h",  caption="Count distribution within categories")
+
+```
+
+
+
+\newpage
+\section{Count density, based only on concordance samples}
+
+
+
+```{r, echo=FALSE, results='asis'}
+
+  cat("![Count distribution](", output_dir, "/count_density.", plot_settings$format, "){width=80%}",sep="")
+
+```
+
+
+
+
+\section{NPX density, based only on concordance samples}
+
+
+```{r, echo=FALSE, results='asis'}
+
+  cat("![NPX distribution](", output_dir, "/NPX_density.", plot_settings$format, "){width=80%}",sep="")
+
+```
+
 
 
 
@@ -221,11 +260,43 @@ create_correlation_table(count_cor$summary , font_size = 12, format = "latex")
 ```
 
 
-\subsection{Including data points above product specific background}
+
+```{r, corcountb}
+count_cor <- correlation_function(
+    data = Concordance_count_npx %>% mutate(plate_id="all_plates", sample_index=sample_name),
+    value_column = "log2count",
+    comparison_column = parameters$run_var,
+    filter_sample_type = "SAMPLE",
+    filter_assay_type = "assay"
+)
+
+create_correlation_table(count_cor$summary , font_size = 12, format = "latex")
+
+
+```
+
+
+\newpage
+\subsection{Including only data points above product specific background}
 
 ```{r, corcount2}
 count_cor <- correlation_function(
     data = Concordance_count_npx_above_background %>% mutate(plate_id="all_plates",block ="all_block", sample_index=sample_name),
+    value_column = "log2count",
+    comparison_column = parameters$run_var,
+    filter_sample_type = "SAMPLE",
+    filter_assay_type = "assay"
+)
+
+create_correlation_table(count_cor$summary , font_size = 12, format = "latex")
+
+
+```
+
+
+```{r, corcount2b}
+count_cor <- correlation_function(
+    data = Concordance_count_npx_above_background %>% mutate(plate_id="all_plates", sample_index=sample_name),
     value_column = "log2count",
     comparison_column = parameters$run_var,
     filter_sample_type = "SAMPLE",
@@ -259,6 +330,20 @@ create_correlation_table(NPX_cor$summary , font_size = 12, format = "latex")
 ```
 
 
+```{r, NPXcorb}
+
+NPX_cor <- correlation_function(
+    data = Concordance_count_npx %>% mutate(plate_id="all_plates", sample_index=sample_name),
+    value_column = "NPX",
+    comparison_column = parameters$run_var,
+    filter_sample_type = "SAMPLE",
+    filter_assay_type = "assay"
+)
+
+create_correlation_table(NPX_cor$summary , font_size = 12, format = "latex")
+
+```
+
 \subsection{Including only data points above background}
 
 
@@ -277,15 +362,40 @@ create_correlation_table(NPX_cor$summary , font_size = 12, format = "latex")
 ```
 
 
+```{r, NPXcor2b}
+
+NPX_cor <- correlation_function(
+    data = Concordance_count_npx_above_background %>% mutate(plate_id="all_plates", sample_index=sample_name),
+    value_column = "NPX",
+    comparison_column = parameters$run_var,
+    filter_sample_type = "SAMPLE",
+    filter_assay_type = "assay"
+)
+
+create_correlation_table(NPX_cor$summary , font_size = 12, format = "latex")
+
+```
+
+
 
 \newpage
 
 \section{Per assay NPX correlations distribution}
 
+\subsection{All data points included}
 
 
 ```{r, results='asis', echo=FALSE}
-  cat("![NPX correlation distribution](", output_dir, "/corrplot.", plot_settings$format, "){width=100%}",sep="")
+  cat("![NPX correlation distribution](", output_dir, "/corrplot_all.", plot_settings$format, "){width=100%}",sep="")
+
+```
+
+
+\subsection{Only data above product specific background included}
+
+
+```{r, results='asis', echo=FALSE}
+  cat("![NPX correlation distribution](", output_dir, "/corrplot_above.", plot_settings$format, "){width=100%}",sep="")
 
 ```
 
@@ -303,6 +413,22 @@ cv_data<-aggregate_cv(yourdata, "NPX", parameters$Background, comp_var="run_id",
                                                                              Mean_interCV=mean(inter_plate_CV, na.rm = TRUE),
                                                                              Median_interCV=median(inter_plate_CV,na.rm=TRUE), .groups = "drop") %>%  mutate(across(where(is.numeric), ~ round(., digits = 2))) %>% 
 kbl(position = "!h",format="latex", booktabs = T, caption = "Mean and Median of CV based on samples controls") %>% kable_styling(font_size = 12,full_width = FALSE)
+
+```
+
+
+
+
+
+```{r}
+
+cv_data<-aggregate_cv(yourdata, "NPX", parameters$Background, comp_var="run_id", filter_value =  "SAMPLE_CONTROL", additionnal_var=c(parameters$run_var, "assay_label", "block"))
+
+  cv_data %>% group_by(!!sym(parameters$run_var), assay_label,block) %>% summarise(Mean_intraCV=mean(intra_CV, na.rm = TRUE),
+                                                                             Median_intraCV=median(intra_CV,na.rm=TRUE),
+                                                                             Mean_interCV=mean(inter_plate_CV, na.rm = TRUE),
+                                                                             Median_interCV=median(inter_plate_CV,na.rm=TRUE), .groups = "drop") %>%  mutate(across(where(is.numeric), ~ round(., digits = 2))) %>% 
+kbl(position = "!h",format="latex", booktabs = T, caption = "Mean and Median of CV based on samples controls per block") %>% kable_styling(font_size = 12,full_width = FALSE)
 
 ```
 
@@ -348,14 +474,53 @@ kbl(position = "!h",format="latex", booktabs = T, caption = "Mean and Median of 
 
 
 \newpage
-\section{Average detectability}
+\section{Average detectability, based on concordance samples}
 
 
 ```{r}
 
-detectability_data %>% group_by(!!sym(parameters$run_var)) %>% summarise(Average_detectability=mean(Detectability, na.rm = TRUE)) %>% 
+detectability_data %>% group_by(!!sym(parameters$run_var)) %>% summarise(Average_detectability=round(mean(Detectability, na.rm = TRUE),digits = 3)) %>% 
 kbl(position = "!h",format="latex", booktabs = T, caption = "Average detectability per Product") %>% kable_styling(font_size = 12,full_width = FALSE)
+
 ```
+
+
+```{r}
+
+detectability_data %>% group_by(!!sym(parameters$run_var),block) %>% summarise(Average_detectability=round(mean(Detectability, na.rm = TRUE),digits = 3)) %>% pivot_wider(names_from =!!sym(parameters$run_var), values_from = Average_detectability ) %>% 
+kbl(position = "!h",format="latex", booktabs = T, caption = "Average detectability per Product and block") %>% kable_styling(font_size = 12,full_width = FALSE)
+
+```
+
+
+\newpage
+\section{Across block distribution of assays loosing more than 10 percent detectability}
+
+
+```{r}
+
+ unique_categories <- unique(detectability_data[[parameters$run_var]])
+  
+  if (length(unique_categories) != 2) {
+    stop("The comparison variable must have exactly two unique categories.")
+  }
+  
+  cat1 <- unique_categories[1]
+  cat2 <- unique_categories[2]
+  
+  
+detectability_data %>%
+    group_by(!!sym(parameters$run_var),block, olink_id) %>%
+    summarise(agg_value = mean(Detectability, na.rm = TRUE), .groups = "drop") %>% # This in case we have more than one value for each comp var and olink id.
+    pivot_wider(names_from = !!sym(parameters$run_var), values_from = agg_value) %>%
+    group_by(block,olink_id) %>%
+    summarise(diff_value = .data[[cat1]] - .data[[cat2]], .groups = "drop") %>% filter(diff_value > 0.10) %>% group_by(block) %>% count() %>% 
+kbl(position = "!h",format="latex", booktabs = T, caption = "Assays loosing more than 10 percent detectability per block") %>% kable_styling(font_size = 12,full_width = FALSE)
+
+```
+
+
+
 
 \newpage
 \section{Percentage of assays detectable in at least 10, 50 percent of the concordance samples}

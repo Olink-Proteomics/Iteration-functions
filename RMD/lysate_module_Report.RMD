@@ -1,0 +1,430 @@
+---
+title: "Lysate module report"
+author: "Haifa Splittorff"
+
+output:
+  pdf_document:
+    latex_engine: xelatex
+    keep_tex: true
+    includes:
+      in_header: templates/olink_style_windows.tex
+      before_body: templates/olink_title_style_internal_projects.tex
+  html_document:
+    df_print: paged
+fontsize: 12pt
+---
+\makeolinktitle
+\thispagestyle{olink_header_toc}
+\tableofcontents
+\newpage
+\pagestyle{olink_header}
+
+
+```{r setup, include=FALSE}
+options(tinytex.verbose = TRUE)
+knitr::opts_chunk$set(echo = F)
+knitr::opts_chunk$set(warning = F)
+knitr::opts_chunk$set(message = F)
+knitr::opts_chunk$set(fig.pos = 'H',tab.pos = "H", out.extra = "")
+knitr::opts_knit$set(eval.after = "fig.cap")
+
+source("Rcode/mylib.R")
+sapply(list.files("Functions", pattern ="\\.R$", full.names = TRUE), source)
+
+loadfonts(device = "win")
+
+windowsFonts("Arial" = windowsFont("Arial"))
+par(family="Arial")
+plot(1:10)
+
+options(knitr.table.format = "pandoc")
+
+
+# Load configuration
+config <- yaml::read_yaml("config_product.yml")
+
+input_data <- config$input_lysate
+parameters <- config$parameters
+plot_settings <- config$plot_settings
+
+
+# Output directory
+product_name <- parameters$Product
+project_name <- parameters$Project
+output_dir <- file.path("Results", product_name, "Lysate_module")
+outliers<-c()
+yourdata <- read_rds(input_data) %>% mutate(NPX= !!rlang::sym(parameters$npx_var)) %>% # some olink_analyse functions need NPX
+filter(sample_qc=="PASS", !(sample_id %in% outliers))                                         
+matrix_types <- unique(yourdata[[as.character(sym(parameters$matrix_column))]] )
+
+
+
+```
+
+
+\newpage
+\section{Param}
+
+Product :  `r product_name`   
+Project: `r project_name`   
+
+<!-- \newpage -->
+
+<!-- \section{PCA} -->
+
+
+<!-- ```{r, echo=FALSE, results='asis'} -->
+
+<!--   cat("![PCA plot for samples using NPX data](", output_dir, "/PCA_plot.", plot_settings$format, "){width=100%}",sep="") -->
+
+<!-- ``` -->
+<!-- \newpage -->
+
+
+<!-- \section{IQR} -->
+
+
+<!-- ```{r, echo=FALSE, results='asis'} -->
+
+<!--   cat("![IQR plot for samples using NPX data](", output_dir, "/qc_plot.", plot_settings$format, "){width=100%}",sep="") -->
+
+<!-- ``` -->
+
+
+<!-- \newpage -->
+
+
+<!-- \section{Sample wise NPX distribution} -->
+
+
+<!-- ```{r, echo=FALSE, results='asis'} -->
+
+<!--   cat("![Sample-wise NPX distribution](", output_dir, "/distplot.", plot_settings$format, "){width=100%}",sep="") -->
+
+<!-- ``` -->
+
+
+
+
+
+<!-- \newpage -->
+<!-- \section{Count density, based only on concordance samples} -->
+
+
+
+<!-- ```{r, echo=FALSE, results='asis'} -->
+
+<!--   cat("![Count distribution](", output_dir, "/count_density.", plot_settings$format, "){width=80%}",sep="") -->
+
+<!-- ``` -->
+
+
+
+
+<!-- \section{NPX density, based only on concordance samples} -->
+
+
+<!-- ```{r, echo=FALSE, results='asis'} -->
+
+<!--   cat("![NPX distribution](", output_dir, "/NPX_density.", plot_settings$format, "){width=80%}",sep="") -->
+
+<!-- ``` -->
+
+
+
+
+
+<!-- \newpage -->
+
+
+<!-- \section{Count regression analysis} -->
+
+<!-- ```{r, results='asis', echo=FALSE} -->
+<!--   cat("![Log2count regression](", output_dir, "/log2count_regression.", plot_settings$format, "){width=100%}",sep="") -->
+
+<!-- ``` -->
+
+
+
+
+<!-- \newpage -->
+
+
+<!-- \section{NPX regression analysis} -->
+
+<!-- ```{r, results='asis', echo=FALSE} -->
+<!--   cat("![NPX regression](", output_dir, "/NPX_regression.", plot_settings$format, "){width=100%}",sep="") -->
+
+<!-- ``` -->
+
+<!-- \newpage -->
+
+<!-- \section{Per assay count correlations} -->
+<!-- \subsection{Including all data points} -->
+
+
+<!-- ```{r, corcount} -->
+<!-- count_cor <- correlation_function( -->
+<!--     data = Concordance_count_npx %>% mutate(plate_id="all_plates",block ="all_block", sample_index=sample_name), -->
+<!--     value_column = "log2count", -->
+<!--     comparison_column = parameters$run_var, -->
+<!--     filter_sample_type = "SAMPLE", -->
+<!--     filter_assay_type = "assay" -->
+<!-- ) -->
+
+<!-- create_correlation_table(count_cor$summary , font_size = 12, format = "latex") -->
+
+
+<!-- ``` -->
+
+
+<!-- \subsection{Including only data points above product specific background} -->
+
+<!-- ```{r, corcount2} -->
+<!-- count_cor <- correlation_function( -->
+<!--     data = Concordance_count_npx_above_background %>% mutate(plate_id="all_plates",block ="all_block", sample_index=sample_name), -->
+<!--     value_column = "log2count", -->
+<!--     comparison_column = parameters$run_var, -->
+<!--     filter_sample_type = "SAMPLE", -->
+<!--     filter_assay_type = "assay" -->
+<!-- ) -->
+
+<!-- create_correlation_table(count_cor$summary , font_size = 12, format = "latex") -->
+
+
+<!-- ``` -->
+
+<!-- \newpage -->
+
+<!-- \section{Per assay NPX correlations} -->
+
+<!-- \subsection{Including all data points} -->
+
+
+<!-- ```{r, NPXcor} -->
+
+<!-- NPX_cor <- correlation_function( -->
+<!--     data = Concordance_count_npx %>% mutate(plate_id="all_plates",block ="all_block", sample_index=sample_name), -->
+<!--     value_column = "NPX", -->
+<!--     comparison_column = parameters$run_var, -->
+<!--     filter_sample_type = "SAMPLE", -->
+<!--     filter_assay_type = "assay" -->
+<!-- ) -->
+
+<!-- create_correlation_table(NPX_cor$summary , font_size = 12, format = "latex") -->
+
+<!-- ``` -->
+
+
+<!-- \subsection{Including only data points above background} -->
+
+
+<!-- ```{r, NPXcor2} -->
+
+<!-- NPX_cor <- correlation_function( -->
+<!--     data = Concordance_count_npx_above_background %>% mutate(plate_id="all_plates",block ="all_block", sample_index=sample_name), -->
+<!--     value_column = "NPX", -->
+<!--     comparison_column = parameters$run_var, -->
+<!--     filter_sample_type = "SAMPLE", -->
+<!--     filter_assay_type = "assay" -->
+<!-- ) -->
+
+<!-- create_correlation_table(NPX_cor$summary , font_size = 12, format = "latex") -->
+
+<!-- ``` -->
+
+
+
+<!-- \newpage -->
+
+<!-- \section{Per assay NPX correlations distribution} -->
+
+
+
+<!-- ```{r, results='asis', echo=FALSE} -->
+<!--   cat("![NPX correlation distribution](", output_dir, "/corrplot.", plot_settings$format, "){width=100%}",sep="") -->
+
+<!-- ``` -->
+
+
+
+
+\newpage
+\section{Coefficient of variance based on Lysate replicate samples}
+
+Replicates are different on different plates, interplate CV can not be calculated.  
+For each product, cv values from all replicate runs were aggregated to one single value using the median.  
+
+\subsection{CV based on tissue lysate replicates}
+
+
+```{r}
+cv_data<-aggregate_cv(yourdata, "NPX", parameters$Background, comp_var="run_id", filter_col = "sample_label", filter_value =  "Tissue_Lysate_replicates", additionnal_var=c(parameters$run_var,"block"))
+
+cv_data %>% group_by(!!sym(parameters$run_var)) %>% summarise(Median_intraCV=median(intra_CV,na.rm=TRUE),
+                                                 Median_inter_runCV=median(inter_run_CV,na.rm=TRUE), .groups = "drop") %>%  mutate(across(where(is.numeric), ~ round(., digits = 2))) %>% 
+kbl(position = "!h",format="latex", booktabs = T, caption = "Overall Median of CV based on Tissue Lysate replicates") %>% kable_styling(font_size = 12,full_width = FALSE)
+
+```
+
+
+
+```{r}
+
+cv_data %>% group_by(!!sym(parameters$run_var),block) %>% summarise(Mean_intraCV=mean(intra_CV, na.rm = TRUE),
+                                                                             Median_intraCV=median(intra_CV,na.rm=TRUE),
+                                                                             Mean_inter_runCV=mean(inter_run_CV, na.rm = TRUE),
+                                                                             Median_inter_runCV=median(inter_run_CV,na.rm=TRUE), .groups = "drop") %>%  mutate(across(where(is.numeric), ~ round(., digits = 2))) %>% 
+kbl(position = "!h",format="latex", booktabs = T, caption = "Mean and Median of CV based on Tissue Lysate replicates, per block") %>% kable_styling(font_size = 12,full_width = FALSE)
+
+```
+
+
+\newpage
+
+
+```{r, results='asis', echo=FALSE}
+  cat("![Distribution of intraCV based on tissue lysate replicates](", output_dir, "/violin_intra_tissue.", plot_settings$format, "){width=100%}",sep="")
+
+```
+
+\newpage
+\subsection{CV based on cell lysate replicates}
+
+
+```{r}
+cv_data<-aggregate_cv(yourdata, "NPX", parameters$Background, comp_var="run_id", filter_col = "sample_label", filter_value =  "Cell_Lysate_replicates", additionnal_var=c(parameters$run_var,"block"))
+
+cv_data %>% group_by(!!sym(parameters$run_var)) %>% summarise(Median_intraCV=median(intra_CV,na.rm=TRUE),
+                                                 Median_inter_runCV=median(inter_run_CV,na.rm=TRUE), .groups = "drop") %>%  mutate(across(where(is.numeric), ~ round(., digits = 2))) %>% 
+kbl(position = "!h",format="latex", booktabs = T, caption = "Overall Median of CV based on Cell Lysate replicates") %>% kable_styling(font_size = 12,full_width = FALSE)
+
+```
+
+
+
+```{r}
+
+
+cv_data %>% group_by(!!sym(parameters$run_var),block) %>% summarise(Mean_intraCV=mean(intra_CV, na.rm = TRUE),
+                                                                             Median_intraCV=median(intra_CV,na.rm=TRUE),
+                                                                             Mean_inter_runCV=mean(inter_run_CV, na.rm = TRUE),
+                                                                             Median_inter_runCV=median(inter_run_CV,na.rm=TRUE), .groups = "drop") %>%  mutate(across(where(is.numeric), ~ round(., digits = 2))) %>% 
+kbl(position = "!h",format="latex", booktabs = T, caption = "Mean and Median of CV based on Cell Lysate replicates,  per block") %>% kable_styling(font_size = 12,full_width = FALSE)
+
+```
+
+
+
+\newpage
+
+
+```{r, results='asis', echo=FALSE}
+  cat("![Distribution of intraCV based on tissue lysate replicates](", output_dir, "/violin_intra_cell.", plot_settings$format, "){width=100%}",sep="")
+
+```
+
+
+
+
+\newpage
+\section{Average detectability per replicate run}
+
+
+
+```{r}
+
+detectability <- summarize_detectability_across_runs(
+    df = filter(yourdata),
+    run_var =  "run_id",
+    npx = parameters$npx_var,
+    background = parameters$Background,
+    caption = "Average detectability per replicate run",
+    format = "latex",
+    additional_group_vars = parameters$run_var
+  )
+
+detectability$data %>% group_by(!!sym(parameters$run_var)) %>% summarise(Rep1=round(mean(rep1, na.rm = TRUE),digits = 3),
+                                                                    Rep2=round(mean(rep2, na.rm = TRUE),digits = 3),
+                                                                    Rep3=round(mean(rep3, na.rm = TRUE),digits = 3)
+                                                                    ) %>% 
+kbl(position = "!h",format="latex", booktabs = T, caption = "Average detectability per replicate run and product") %>% kable_styling(font_size = 12,full_width = FALSE)
+
+```
+
+
+
+
+\newpage
+\section{Percentage of assays detectable in at least one lysate sample}
+
+
+```{r, echo=FALSE, results='asis'}
+
+detectability_data<-aggregate_detectability(
+df = yourdata,
+sample_name = "sample_name",
+comp_var = parameters$run_var,
+run_var = "run_id",
+npx = parameters$npx_var,
+background = parameters$Background
+)
+
+calculate_detectability_percentage_per_group(
+     df = detectability_data, 
+     assay_group = unique(yourdata %>% select(olink_id,assay_label)), 
+     detectability_col = "Detectability", 
+ thresholds = c( 0),
+   group_var = "assay_label",
+   instrument_col = "Product") %>% kbl(position = "!h", format="latex", caption = "Percentage of assays detectable in at least one sample per product" ) %>%
+        kable_classic(full_width = FALSE)
+
+```
+
+
+
+\newpage
+\section{Percentage of assays detectable in at least 10, 50 percent of the lysate samples}
+
+
+```{r, echo=FALSE, results='asis'}
+
+calculate_detectability_percentage_per_group(
+     df = detectability_data, 
+     assay_group = unique(yourdata %>% select(olink_id,assay_label)), 
+     detectability_col = "Detectability", 
+ thresholds = c( 0.1, 0.5),
+   group_var = "assay_label",
+   instrument_col = "Product") %>% kbl(position = "!h", format="latex", caption = "Percentage of assays detectable in at least 10, 50 percent of the lysate samples" ) %>%
+        kable_classic(full_width = FALSE)
+
+```
+
+
+
+
+\newpage
+\section{Overlap of assays detectable in at least 10, 50 percent of the lysate samples between products}
+
+
+```{r, results='asis', echo=FALSE}
+  cat("![Overlap of assays detectable in at least 10 and 50 percent between products](", output_dir, "/Venn_detect.", plot_settings$format, "){width=100%}",sep="")
+
+```
+
+
+}
+
+
+
+
+\newpage
+\section{Appendix}
+
+
+\subsection{R Session Information}
+
+```{r, results='asis'}
+toLatex(sessionInfo())
+```
+

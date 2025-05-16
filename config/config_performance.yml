@@ -1,14 +1,14 @@
-input_data: "Product_comp.parquet"          # Input data file path
+input_data: "NPX data/maximus_preit2.rds"          # Input data file path
 
 
 parameters:
-  Product: "ProjectA"
-  run_var: "Product"                      # Column for comparing
-  Project: "Iteration runs April 2025"    # where does the data come from
-  Background: "detection"
-  matrix_column: "matrix"
+  Product: "Maximus"
+  Instrument: "NovaseqX"
+  run_var: "run_id"                      # Column for comparing
+  Project: "iteration2 full run April 2025"    # where does the data come from
+  Background: "lod_in_npx"  
+  matrix_column: "sample_subtype"
   npx_var: "pc_normalized_npx"
-  
 
   
 
@@ -18,4 +18,5 @@ plot_settings:
  dpi: 300                               # DPI for plot saving
  fontsize: 14                           # text font size
  format: "png"                          # format of the figures
+
 

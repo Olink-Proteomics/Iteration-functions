@@ -2,11 +2,10 @@
 ######################
 #
 # Source required libraries and functions
-source("mylib.R")
-sapply(list.files("Functions", pattern = "\\.R$", full.names = TRUE), source)
+sapply(list.files("../functions", pattern = "\\.R$", full.names = TRUE), source)
 
 # Load configuration
-config <- yaml::read_yaml("config.yml")
+config <- yaml::read_yaml("../config/config_performance.yml")
 
 #generate graphs
 cat("\nGenerating graphics...\n")
@@ -18,7 +17,7 @@ report_filename <- paste0("Product_performance_report_", parameters$Instrument, 
 
 cat(paste("\nRendering the PDF report and saving as", report_filename, "...\n"))
 rmarkdown::render(
-  input = "Product_Performance_Report.rmd", 
+  input = "../RMD/product_performance_Report.rmd", 
   params = config, 
   output_file = report_filename,
   output_format = "pdf_document"

@@ -1,5 +1,5 @@
 ---
-title: "Product performance report"
+title: "Instrument comparison report"
 author: "Haifa Splittorff"
 
 output:
@@ -7,8 +7,8 @@ output:
     latex_engine: xelatex
     keep_tex: true
     includes:
-      in_header: olink_style_windows.tex
-      before_body: olink_title_style_internal_projects.tex
+      in_header: templates/olink_style_windows.tex
+      before_body: templates/olink_title_style_internal_projects.tex
   html_document:
     df_print: paged
 fontsize: 12pt
@@ -26,8 +26,6 @@ knitr::opts_chunk$set(echo = F)
 knitr::opts_chunk$set(warning = F)
 knitr::opts_chunk$set(message = F)
 knitr::opts_chunk$set(fig.pos = 'H',tab.pos = "H", out.extra = "")
-#knitr::opts_chunk$set(fig.align="center")
-#knitr::opts_chunk$set(fig.height=10,fig.width=12)
 knitr::opts_knit$set(eval.after = "fig.cap")
 
 source("mylib.R")
@@ -43,19 +41,17 @@ options(knitr.table.format = "pandoc")
 
 
 # Load configuration
-config <- yaml::read_yaml("config.yml")
+config <- yaml::read_yaml("config_instrument.yml")
 
 input_data <- config$input_data
 parameters <- config$parameters
 plot_settings <- config$plot_settings
 
 
-
 # Output directory
 product_name <- parameters$Product
-instrument_name <- parameters$Instrument
 project_name <- parameters$Project
-output_dir <- file.path("Results", product_name, instrument_name)
+output_dir <- file.path("Results", product_name, "Instrument_comparison")
 yourdata <- readRDS(input_data)
 matrix_types <- unique(yourdata[[as.character(sym(parameters$matrix_column))]] )
 
@@ -67,7 +63,6 @@ matrix_types <- unique(yourdata[[as.character(sym(parameters$matrix_column))]] )
 \section{Param}
 
 Product :  `r product_name`   
-Instrument: `r product_name`   
 Project: `r project_name`   
 
 \newpage
@@ -132,6 +127,18 @@ generate_qc_table(yourdata, compare_by =parameters$run_var, qc_var = "assay", qc
 ```{r}
 generate_count_table_with_block(yourdata, comp_var=parameters$run_var,
                                               values_fill = 0, font_size = 12, format = "latex")
+```
+
+
+\newpage
+\section{Count distribution within categories}
+
+```{r}
+
+result<- descriptive_tabulation(yourdata,parameters$run_var)
+
+result$count_categ_table
+
 ```
 
 
@@ -208,6 +215,20 @@ create_correlation_table(result$summary , font_size = 8, format = "latex")
 
 ```
 
+\newpage
+
+
+\section{NPX variance differences across instruments}
+
+```{r}
+var<- variance_function(yourdata, parameters$run_var)
+
+var$summary %>%
+  kable(caption = "\\label{tab:var} Differences in variances across instruments.")
+
+```
+
+
 
 \newpage
 
@@ -252,7 +273,9 @@ cat(rmd_syntax, sep= "\n\n")
 
 ```
 
+
 \newpage
+
 
 ```{r, echo=FALSE, results='asis'}
 
@@ -261,6 +284,15 @@ cat(rmd_syntax, sep= "\n\n")
 ```
 
 
+\newpage
+\section{Internal controls}
+
+
+```{r, echo=FALSE, results='asis'}
+
+  cat("![Internal Control log2count regression](", output_dir, "/Internal_control_regression.", plot_settings$format, "){width=100%}",sep="")
+
+```
 
 \newpage
 \section{Coefficient of variance based on samples controls}
@@ -273,13 +305,14 @@ cv<-generate_cv_summary(
     comp_var = parameters$run_var,
     npx = parameters$npx_var,
     threshold = parameters$Background,
-    sample_type = "SAMPLE_CONTROL",
     group_vars = c(parameters$run_var, "plate_id", "block"),
     pivot_var = parameters$run_var,
     value_col = "intra_CV",
-    caption = "Average of intra plate CV per block, plate, and run", format = "latex"
+    caption = "Average of intra plate CV per block, plate, and run", 
+    format = "latex"
   )
 cv$table
+
 ```
 
 
@@ -290,35 +323,78 @@ cv<-generate_cv_summary(
     comp_var = parameters$run_var,
     npx = parameters$npx_var,
     threshold =  parameters$Background,
-    sample_type = "SAMPLE_CONTROL",
     group_vars = c(parameters$run_var, "plate_id", "block"),
     pivot_var = parameters$run_var,
     value_col = "inter_plate_CV",
-    caption = "Average of inter plate CV per block, and run", format = "latex"
+    caption = "Average of inter plate CV per block, and run",
+    format = "latex"
   )
 cv$table
+
 ```
 
 
 
 ```{r}
 
+
 cv<-generate_cv_summary(
-    df = filter(yourdata,sample_qc=="PASS"),
-    comp_var = parameters$run_var,
-    npx = parameters$npx_var,
-    threshold =  parameters$Background,
-    sample_type = "SAMPLE_CONTROL",
-    value_col = "inter_run_CV",
-    caption = "Average of inter run CV per block", format = "latex"
-  )
+  yourdata, 
+  value_col="inter_run_CV",
+  comp_var = parameters$run_var, 
+  npx = parameters$npx_var, 
+  threshold = parameters$Background, 
+  group_vars = "block",
+  caption="Inter-instrument CV per block", 
+  format ="latex") 
+
 cv$table
 
 ```
 
 
 \newpage
-\section{Average detectability per block, plasma}
+\section{CV distribution within block and Instrument}
+
+
+
+```{r, echo=FALSE, results='asis'}
+
+  cat("![Intra CV distribution within block and Instrument](", output_dir, "/intracv_regression.", plot_settings$format, "){width=100%}",sep="")
+
+```
+
+\newpage
+
+```{r, echo=FALSE, results='asis'}
+
+  cat("![Inter plate CV distribution within block and Instrument](", output_dir, "/interplatecv_regression.", plot_settings$format, "){width=100%}",sep="")
+
+```
+
+
+\newpage
+\section{Regression of CV across instruments}
+
+
+
+```{r, echo=FALSE, results='asis'}
+
+  cat("![Intra CV regression across instruments](", output_dir, "/intra_CV_regression_SC.", plot_settings$format, "){width=100%}",sep="")
+
+```
+
+\newpage
+
+```{r, echo=FALSE, results='asis'}
+
+  cat("![Inter plate CV regression across instruments](", output_dir, "/inter_plate_CV_regression_SC.", plot_settings$format, "){width=100%}",sep="")
+
+```
+
+
+\newpage
+\section{Average detectability per block}
 
 
 ```{r}
@@ -335,10 +411,10 @@ results<-summarize_detectability_across_runs(
     format = "latex"
   )
 results$table
-
 ```
+
 \newpage
-\section{Detectability distribution within block across replicate runs}
+\section{Detectability distribution within block across instruments}
 
 
 ```{r, echo=FALSE, results='asis'}
@@ -348,70 +424,17 @@ results$table
 ```
 
 
+
 \newpage
+\section{Regression of assay detectability across instruments}
 
-\section{Percentage of assays detectable in at least 10, 50 percent of the concordance samples}
 
+```{r, echo=FALSE, results='asis'}
 
-```{r}
-
-  #ADD LATER ON FILTER ON CONCORDANCE SAMPLES and remove dependency to assay_group file
-assay_group<-yourdata %>% distinct(olink_id, label)
-
-results<-summarize_detectability_across_runs(
-  df = filter(yourdata,sample_qc=="PASS"),
-  run_var = parameters$run_var,
-  npx = parameters$npx_var,
-  background = parameters$Background,
-  matrix_name = parameters$matrix_column,
-  matrix = "Plasma",
-  caption = "Average detectability per block",
-  format = "latex"
-)
-
-calculate_detectability_percentage (results$data, detectability_col= "median_detectability" , assay_group = assay_group, group_var = "label", thresholds = c(0.1,0.5)) %>%
-  kbl(position = "!h", format="latex", caption = "Percentage of assays detectable in at least 10, 50 percent of the concordance samples", ) %>%
-  kable_classic(full_width = FALSE)
+  cat("![Detectability regression across instruments](", output_dir, "/Detectability_plasma_regression_SC.", plot_settings$format, "){width=100%}",sep="")
 
 ```
 
-\newpage
-\section{Percentage of assays detectable in at least one sample}
-
-
-```{r}
-
-process_matrix <- function(matrix_name) {
-
-  assay_group <- yourdata %>% distinct(olink_id, label)
-    results <- summarize_detectability_across_runs(
-    df = filter(yourdata, sample_qc == "PASS"),
-    run_var = parameters$run_var,
-    npx = parameters$npx_var,
-    background = parameters$Background,
-    matrix_name = parameters$matrix_column,
-    matrix = matrix_name,
-    caption = paste0("Average detectability per block - ", matrix_name),
-    format = "latex"
-  )
-
-  calculate_detectability_percentage(
-    results$data,
-    detectability_col = "median_detectability",
-    assay_group = assay_group,
-    group_var = "label",
-    thresholds = c(0)
-  ) %>%
-    kbl(position = "!h", format = "latex",
-        caption = paste0("Percentage of assays detectable in at least one sample in ", matrix_name, " samples"),
-        col.names = c("Group", "Percentage")) %>%
-    kable_classic(full_width = FALSE)
-
-}
-
-process_matrix("Plasma")
-
-```
 
 
 \newpage

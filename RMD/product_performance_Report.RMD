@@ -1,0 +1,477 @@
+---
+title: "Product performance report"
+author: "Haifa Splittorff"
+
+output:
+  pdf_document:
+    latex_engine: xelatex
+    keep_tex: true
+    includes:
+      in_header: templates/olink_style_windows.tex
+      before_body: templates/olink_title_style_internal_projects.tex
+  html_document:
+    df_print: paged
+fontsize: 12pt
+---
+\makeolinktitle
+\thispagestyle{olink_header_toc}
+\tableofcontents
+\newpage
+\pagestyle{olink_header}
+
+
+```{r setup, include=FALSE}
+options(tinytex.verbose = TRUE)
+knitr::opts_chunk$set(echo = F)
+knitr::opts_chunk$set(warning = F)
+knitr::opts_chunk$set(message = F)
+knitr::opts_chunk$set(fig.pos = 'H',tab.pos = "H", out.extra = "")
+#knitr::opts_chunk$set(fig.align="center")
+#knitr::opts_chunk$set(fig.height=10,fig.width=12)
+knitr::opts_knit$set(eval.after = "fig.cap")
+
+source("Rcode/mylib.R")
+sapply(list.files("Functions", pattern ="\\.R$", full.names = TRUE), source)
+
+loadfonts(device = "win")
+
+windowsFonts("Arial" = windowsFont("Arial"))
+par(family="Arial")
+plot(1:10)
+
+options(knitr.table.format = "pandoc")
+
+
+#Load configuration
+config <- yaml::read_yaml("config.yml")
+
+input_data <- config$input_data
+parameters <- config$parameters
+plot_settings <- config$plot_settings
+
+
+
+# Output directory
+product_name <- parameters$Product
+instrument_name <- parameters$Instrument
+project_name <- parameters$Project
+background <- parameters$Background
+output_dir <- file.path("Results", product_name, instrument_name)
+yourdata <- readRDS(input_data)
+matrix_types <- unique((yourdata %>% filter(sample_type=="SAMPLE"))[[as.character(sym(parameters$matrix_column))]] )
+outliers<-c()
+
+
+
+```
+
+\newpage
+\section{Param}
+
+Product :  `r product_name`   
+Instrument: `r product_name`   
+Project: `r project_name`   
+Background: `r background`
+
+\newpage
+
+\section{PCA}
+
+
+```{r, echo=FALSE, results='asis'}
+
+  cat("![PCA plot for samples using NPX data](", output_dir, "/PCA_plot.", plot_settings$format, "){width=100%}",sep="")
+
+```
+\newpage
+
+
+\section{IQR}
+
+
+```{r, echo=FALSE, results='asis'}
+
+  cat("![IQR plot for samples using NPX data](", output_dir, "/qc_plot.", plot_settings$format, "){width=100%}",sep="")
+
+```
+
+\newpage
+
+
+\section{Sample wise NPX distribution}
+
+
+```{r, echo=FALSE, results='asis'}
+
+  cat("![Sample-wise NPX distribution plate 1](", output_dir, "/distplot_plate1.", plot_settings$format, "){width=100%}",sep="")
+
+```
+
+
+
+```{r, echo=FALSE, results='asis'}
+
+  cat("![Sample-wise NPX distribution plate 2](", output_dir, "/distplot_plate2.", plot_settings$format, "){width=100%}",sep="")
+
+```
+
+\newpage
+
+
+\section{QC summary}
+
+```{r}
+
+generate_qc_table(yourdata, compare_by = parameters$run_var , qc_col = "sample_qc",
+                              caption = "QC Status of Samples", font_size = 12, format = "latex")
+
+```
+
+
+
+```{r}
+
+generate_qc_table(yourdata, compare_by =parameters$run_var, qc_var = "assay", qc_col = "assay_qc",
+                              caption = "QC Status of assays", font_size = 12, format = "latex")
+
+```
+
+
+\newpage
+
+\section{Total number of counts}
+
+```{r}
+generate_count_table_with_block(yourdata, comp_var=parameters$run_var,
+                                              values_fill = 0, font_size = 12, format = "latex")
+```
+
+
+
+
+\section{Count distribution}
+
+
+
+```{r, echo=FALSE, results='asis'}
+
+  cat("![Count distribution](", output_dir, "/count_density.", plot_settings$format, "){width=80%}",sep="")
+
+```
+
+
+
+
+\section{NPX distribution}
+
+
+```{r, echo=FALSE, results='asis'}
+
+  cat("![NPX distribution](", output_dir, "/NPX_density.", plot_settings$format, "){width=80%}",sep="")
+
+```
+
+
+
+
+<!-- \newpage -->
+
+
+<!-- \section{Count correlations} -->
+
+
+<!-- \section{Per assay count correlations} -->
+
+<!-- ```{r, corcount} -->
+<!-- result <- correlation_function( -->
+<!--   data = filter(yourdata, if (parameters$Background == "detection") { -->
+<!--         get(parameters$Background) == "above EOB"   -->
+<!--       } else { -->
+<!--       NPX > get(parameters$Background) } ,sample_qc=="PASS", !(sample_id%in% outliers) -->
+<!--       ), -->
+<!--   value_column = "log2count", -->
+<!--   comparison_column = parameters$run_var, -->
+<!--   filter_sample_type = "SAMPLE", -->
+<!--   filter_assay_type = "assay", -->
+<!-- ) -->
+
+<!-- create_correlation_table(result$summary , font_size = 8, format = "latex") -->
+
+
+<!-- ``` -->
+
+
+<!-- \section{Per assay NPX correlations} -->
+
+
+<!-- ```{r, NPXcor} -->
+
+<!-- result <- correlation_function( -->
+<!--   data = filter(yourdata, if (parameters$Background == "detection") { -->
+<!--         get(parameters$Background) == "above EOB"   -->
+<!--       } else { -->
+<!--       NPX > get(parameters$Background) }), -->
+<!--   value_column = "NPX", -->
+<!--   comparison_column = parameters$run_var, -->
+<!--   filter_sample_type = "SAMPLE", -->
+<!--   filter_assay_type = "assay", -->
+<!-- ) -->
+
+<!-- create_correlation_table(result$summary , font_size = 8, format = "latex") -->
+
+<!-- ``` -->
+
+
+\newpage
+
+
+<!-- \section{Count regression analysis} -->
+
+<!-- ```{r, results='asis', echo=FALSE} -->
+<!-- rmd_syntax<- generate_rmd_syntax_for_figures(folder_path=paste0(output_dir,"/regression_plots_log2count_",parameters$run_var), label_prefix = "countreg", width = "100%") -->
+<!-- cat(rmd_syntax, sep= "\n\n") -->
+<!-- ``` -->
+
+
+
+
+<!-- \newpage -->
+
+
+<!-- \section{NPX regression analysis} -->
+
+<!-- ```{r, results='asis', echo=FALSE} -->
+<!-- rmd_syntax<- generate_rmd_syntax_for_figures(folder_path=paste0(output_dir,"/regression_plots_NPX_",parameters$run_var), label_prefix = "npxreg", width = "100%") -->
+<!-- cat(rmd_syntax, sep= "\n\n") -->
+<!-- ``` -->
+
+\newpage
+
+\section{External controls}
+
+
+```{r, echo=FALSE, results='asis'}
+
+  cat("![Sample Control NPX distribution](", output_dir, "/distplot_SAMPLE_CONTROL.", plot_settings$format, "){width=100%}",sep="")
+
+```
+
+\newpage
+
+
+```{r, echo=FALSE, results='asis'}
+
+  cat("![Negative Control NPX distribution](", output_dir, "/distplot_NEGATIVE_CONTROL.", plot_settings$format, "){width=100%}",sep="")
+
+```
+
+\newpage
+
+```{r, echo=FALSE, results='asis'}
+
+  cat("![Plate Control NPX distribution](", output_dir, "/distplot_PLATE_CONTROL.", plot_settings$format, "){width=100%}",sep="")
+
+```
+
+
+\newpage
+\section{Overall average of intra and inter-plate CV based on sample controls}
+
+```{r}
+
+cv_data<-aggregate_cv(yourdata, "NPX", parameters$Background, comp_var="run_id", filter_value =  "SAMPLE_CONTROL" )
+
+cv_data %>% summarise(intra_CV=mean(intra_CV,na.rm=TRUE), inter_plate_CV=mean(inter_plate_CV, na.rm = TRUE)) %>% 
+  mutate(across(everything(), ~ round(.x, digits = 2))) %>% 
+   kbl(position = "!h", format = "latex", caption = "Overall average of intra and interCV", longtable = FALSE, booktabs = TRUE)
+
+```
+
+
+\newpage
+\section{Coefficient of variance based on sample controls}
+
+
+```{r}
+
+
+cv<-generate_cv_summary(
+    df = filter(yourdata,sample_qc=="PASS",!sample_id %in% outliers ),
+    comp_var = parameters$run_var,
+    npx = parameters$npx_var,
+    threshold = parameters$Background,
+    group_vars = c(parameters$run_var, "plate_id", "block"),
+    pivot_var = parameters$run_var,
+    value_col = "intra_CV",
+    caption = "Average of intra plate CV per block, plate, and run", format = "latex"
+  )
+cv$table
+```
+
+
+```{r}
+
+cv<-generate_cv_summary(
+    df = filter(yourdata,sample_qc=="PASS",!sample_id %in% outliers),
+    comp_var = parameters$run_var,
+    npx = parameters$npx_var,
+    threshold =  parameters$Background,
+    group_vars = c(parameters$run_var, "plate_id", "block"),
+    pivot_var = parameters$run_var,
+    value_col = "inter_plate_CV",
+    caption = "Average of inter plate CV per block, and run", format = "latex"
+  )
+cv$table
+```
+
+
+
+```{r}
+
+cv<-generate_cv_summary(
+    df = filter(yourdata,sample_qc=="PASS",!sample_id %in% outliers),
+    comp_var = parameters$run_var,
+    npx = parameters$npx_var,
+    threshold =  parameters$Background,
+    value_col = "inter_run_CV",
+    caption = "Average of inter run CV per block", format = "latex"
+  )
+cv$table
+
+```
+
+
+\newpage
+\section{Average detectability per block, matrix}
+
+```{r}
+process_matrix <- function(matrix_name) {
+
+    results <- summarize_detectability_across_runs(
+    df = filter(yourdata, sample_qc == "PASS", !sample_id %in% outliers),
+    run_var = parameters$run_var,
+    npx = parameters$npx_var,
+    background = parameters$Background,
+    matrix_name = parameters$matrix_column,
+    matrix = matrix_name,
+    caption = paste0("Average detectability per block, ", gsub("_", "\\\\_", matrix_name)),
+    format = "latex",
+    additional_group_vars = "assay_label"
+  )
+
+  results$table
+
+}
+
+ 
+```
+
+
+
+```{r, results='asis', echo=FALSE}
+for (mat in matrix_types) {
+  cat(process_matrix(mat), "\n\n")
+}
+
+ 
+```
+
+
+
+\newpage
+\section{ Concordance Detectability distribution within block across replicate runs}
+
+
+```{r, echo=FALSE, results='asis'}
+
+  cat("![Detectability distribution](", output_dir, "/detectplot_concordance.", plot_settings$format, "){width=100%}",sep="")
+
+```
+
+
+\newpage
+
+\section{Percentage of assays detectable in at least 10, 50 percent of the concordance samples}
+
+
+```{r}
+
+results<-summarize_detectability_across_runs(
+  df = filter(yourdata,sample_qc=="PASS", !sample_id %in% outliers, sample_label=="concordance"),
+  run_var = parameters$run_var,
+  npx = parameters$npx_var,
+  background = parameters$Background,
+  caption = "Average detectability per block",
+  format = "latex",
+  additional_group_vars = "assay_label"
+)
+
+calculate_detectability_percentage (results$data, detectability_col= "median_detectability" , group_var = "assay_label", thresholds = c(0.1,0.5)) %>%
+  kbl(position = "!h", format="latex", caption = "Percentage of assays detectable in at least 10, 50 percent of the concordance samples", ) %>%
+  kable_classic(full_width = FALSE)
+
+```
+
+\newpage
+\section{Percentage of assays detectable in at least one sample}
+
+
+```{r, results='asis', echo=FALSE}
+
+process_matrix2 <- function(matrix_name) {
+
+    results <- summarize_detectability_across_runs(
+    df = filter(yourdata, sample_qc == "PASS", !sample_id %in% outliers),
+    run_var = parameters$run_var,
+    npx = parameters$npx_var,
+    background = parameters$Background,
+    matrix_name = parameters$matrix_column,
+    matrix = matrix_name,
+    caption = paste0("Average detectability per block, ", matrix_name),
+    format = "latex",
+    additional_group_vars = "assay_label"
+  )
+
+  calculate_detectability_percentage(
+    results$data,
+    detectability_col = "median_detectability",
+    group_var = "assay_label",
+    thresholds = c(0)
+  ) %>%
+    kbl(position = "!h", format = "latex",
+        caption = paste0("Percentage of assays detectable in at least one sample in ", gsub("_", "\\\\_", matrix_name), " samples"),
+        col.names = c("Group","N", "Percentage")) %>%
+    kable_classic(full_width = FALSE)
+
+}
+
+for (mat in matrix_types) {
+  cat(process_matrix2(mat), "\n\n")
+}
+
+```
+
+
+
+
+\newpage
+\section{Overlap of detectable assays across matrices}
+
+
+```{r, echo=FALSE, results='asis'}
+
+  cat("![Overlap of assays detectable in at least one sample in all 3 replicate runs, across matrices](", output_dir, "/Venn_detect_across_matrix.", plot_settings$format, "){width=100%}",sep="")
+
+```
+
+
+\newpage
+\section{Appendix}
+
+
+\subsection{R Session Information}
+
+```{r, results='asis'}
+toLatex(sessionInfo())
+```
+
