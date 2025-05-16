@@ -1,4 +1,4 @@
-input_data: "NPX data/maximus_preit2.rds"          # Input data file path
+input_data: "data/maximus_preit2.rds"          # Input data file path
 
 
 parameters:

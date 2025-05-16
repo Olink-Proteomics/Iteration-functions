@@ -2,22 +2,22 @@
 ######################
 #
 # Source required libraries and functions
-sapply(list.files("../functions", pattern = "\\.R$", full.names = TRUE), source)
+sapply(list.files("functions", pattern = "\\.R$", full.names = TRUE), source)
 
 # Load configuration
-config <- yaml::read_yaml("../config/config_product.yml")
+config <- yaml::read_yaml("modules/lysate_module/config.yml")
 
 #generate graphs
 cat("\nGenerating graphics...\n")
-source("generate_graphslysate.R")
+source("modules/lysate_module/graphics.R")
 
-report_filename <- paste0("Lysate_module_Report_", parameters$Product, ".pdf")
+report_filename <- paste0("../../reports/Lysate_module_Report_", parameters$Product, ".pdf")
 
 #generate the report
 
 cat(paste("\nRendering the PDF report and saving as", report_filename, "...\n"))
 rmarkdown::render(
-  input = "../RMD/lysate_module_Report.rmd", 
+  input = "modules/lysate_module/report.rmd", 
   params = config, 
   output_file = report_filename,
   output_format = "pdf_document"

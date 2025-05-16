@@ -7,8 +7,8 @@ output:
     latex_engine: xelatex
     keep_tex: true
     includes:
-      in_header: templates/olink_style_windows.tex
-      before_body: templates/olink_title_style_internal_projects.tex
+      in_header: ../../templates/olink_style_windows.tex
+      before_body: ../../templates/olink_title_style_internal_projects.tex
   html_document:
     df_print: paged
 fontsize: 12pt
@@ -30,8 +30,7 @@ knitr::opts_chunk$set(fig.pos = 'H',tab.pos = "H", out.extra = "")
 #knitr::opts_chunk$set(fig.height=10,fig.width=12)
 knitr::opts_knit$set(eval.after = "fig.cap")
 
-source("Rcode/mylib.R")
-sapply(list.files("Functions", pattern ="\\.R$", full.names = TRUE), source)
+sapply(list.files("../../functions", pattern ="\\.R$", full.names = TRUE), source)
 
 loadfonts(device = "win")
 
@@ -56,8 +55,8 @@ product_name <- parameters$Product
 instrument_name <- parameters$Instrument
 project_name <- parameters$Project
 background <- parameters$Background
-output_dir <- file.path("Results", product_name, instrument_name)
-yourdata <- readRDS(input_data)
+output_dir <- file.path("../../output", product_name, instrument_name)
+yourdata <- readRDS(paste0("../../",input_data))%>% mutate(NPX= !!rlang::sym(parameters$npx_var)) # some olink_analyse functions need NPX
 matrix_types <- unique((yourdata %>% filter(sample_type=="SAMPLE"))[[as.character(sym(parameters$matrix_column))]] )
 outliers<-c()
 

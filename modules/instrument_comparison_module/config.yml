@@ -1,11 +1,11 @@
-input_data: "Instrument_comp.rds"          # Input data file path
+input_data: "data/Instrument_comp.rds"          # Input data file path
 
 
 parameters:
   Product: "ProjectA"
   run_var: "Instrument"                      # Column for comparing
   Project: "Iteration runs Mars 2025"    # where does the data come from
-  Background: "detection"
+  Background: "lod_in_npx"
   matrix_column: "matrix_name"
   npx_var: "pc_normalized_npx"
 

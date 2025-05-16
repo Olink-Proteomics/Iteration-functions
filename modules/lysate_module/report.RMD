@@ -7,8 +7,8 @@ output:
     latex_engine: xelatex
     keep_tex: true
     includes:
-      in_header: templates/olink_style_windows.tex
-      before_body: templates/olink_title_style_internal_projects.tex
+      in_header: ../../templates/olink_style_windows.tex
+      before_body: ../../templates/olink_title_style_internal_projects.tex
   html_document:
     df_print: paged
 fontsize: 12pt
@@ -28,8 +28,7 @@ knitr::opts_chunk$set(message = F)
 knitr::opts_chunk$set(fig.pos = 'H',tab.pos = "H", out.extra = "")
 knitr::opts_knit$set(eval.after = "fig.cap")
 
-source("Rcode/mylib.R")
-sapply(list.files("Functions", pattern ="\\.R$", full.names = TRUE), source)
+sapply(list.files("functions", pattern ="\\.R$", full.names = TRUE), source)
 
 loadfonts(device = "win")
 
@@ -41,9 +40,9 @@ options(knitr.table.format = "pandoc")
 
 
 # Load configuration
-config <- yaml::read_yaml("config_product.yml")
+config <- yaml::read_yaml("config.yml")
 
-input_data <- config$input_lysate
+input_data <- config$input_data
 parameters <- config$parameters
 plot_settings <- config$plot_settings
 
@@ -51,9 +50,9 @@ plot_settings <- config$plot_settings
 # Output directory
 product_name <- parameters$Product
 project_name <- parameters$Project
-output_dir <- file.path("Results", product_name, "Lysate_module")
+output_dir <- file.path("../../output", product_name, "Lysate_module")
 outliers<-c()
-yourdata <- read_rds(input_data) %>% mutate(NPX= !!rlang::sym(parameters$npx_var)) %>% # some olink_analyse functions need NPX
+yourdata <- read_rds(paste0("../../",input_data)) %>% mutate(NPX= !!rlang::sym(parameters$npx_var)) %>% # some olink_analyse functions need NPX
 filter(sample_qc=="PASS", !(sample_id %in% outliers))                                         
 matrix_types <- unique(yourdata[[as.character(sym(parameters$matrix_column))]] )
 
@@ -67,186 +66,6 @@ matrix_types <- unique(yourdata[[as.character(sym(parameters$matrix_column))]] )
 
 Product :  `r product_name`   
 Project: `r project_name`   
-
-<!-- \newpage -->
-
-<!-- \section{PCA} -->
-
-
-<!-- ```{r, echo=FALSE, results='asis'} -->
-
-<!--   cat("![PCA plot for samples using NPX data](", output_dir, "/PCA_plot.", plot_settings$format, "){width=100%}",sep="") -->
-
-<!-- ``` -->
-<!-- \newpage -->
-
-
-<!-- \section{IQR} -->
-
-
-<!-- ```{r, echo=FALSE, results='asis'} -->
-
-<!--   cat("![IQR plot for samples using NPX data](", output_dir, "/qc_plot.", plot_settings$format, "){width=100%}",sep="") -->
-
-<!-- ``` -->
-
-
-<!-- \newpage -->
-
-
-<!-- \section{Sample wise NPX distribution} -->
-
-
-<!-- ```{r, echo=FALSE, results='asis'} -->
-
-<!--   cat("![Sample-wise NPX distribution](", output_dir, "/distplot.", plot_settings$format, "){width=100%}",sep="") -->
-
-<!-- ``` -->
-
-
-
-
-
-<!-- \newpage -->
-<!-- \section{Count density, based only on concordance samples} -->
-
-
-
-<!-- ```{r, echo=FALSE, results='asis'} -->
-
-<!--   cat("![Count distribution](", output_dir, "/count_density.", plot_settings$format, "){width=80%}",sep="") -->
-
-<!-- ``` -->
-
-
-
-
-<!-- \section{NPX density, based only on concordance samples} -->
-
-
-<!-- ```{r, echo=FALSE, results='asis'} -->
-
-<!--   cat("![NPX distribution](", output_dir, "/NPX_density.", plot_settings$format, "){width=80%}",sep="") -->
-
-<!-- ``` -->
-
-
-
-
-
-<!-- \newpage -->
-
-
-<!-- \section{Count regression analysis} -->
-
-<!-- ```{r, results='asis', echo=FALSE} -->
-<!--   cat("![Log2count regression](", output_dir, "/log2count_regression.", plot_settings$format, "){width=100%}",sep="") -->
-
-<!-- ``` -->
-
-
-
-
-<!-- \newpage -->
-
-
-<!-- \section{NPX regression analysis} -->
-
-<!-- ```{r, results='asis', echo=FALSE} -->
-<!--   cat("![NPX regression](", output_dir, "/NPX_regression.", plot_settings$format, "){width=100%}",sep="") -->
-
-<!-- ``` -->
-
-<!-- \newpage -->
-
-<!-- \section{Per assay count correlations} -->
-<!-- \subsection{Including all data points} -->
-
-
-<!-- ```{r, corcount} -->
-<!-- count_cor <- correlation_function( -->
-<!--     data = Concordance_count_npx %>% mutate(plate_id="all_plates",block ="all_block", sample_index=sample_name), -->
-<!--     value_column = "log2count", -->
-<!--     comparison_column = parameters$run_var, -->
-<!--     filter_sample_type = "SAMPLE", -->
-<!--     filter_assay_type = "assay" -->
-<!-- ) -->
-
-<!-- create_correlation_table(count_cor$summary , font_size = 12, format = "latex") -->
-
-
-<!-- ``` -->
-
-
-<!-- \subsection{Including only data points above product specific background} -->
-
-<!-- ```{r, corcount2} -->
-<!-- count_cor <- correlation_function( -->
-<!--     data = Concordance_count_npx_above_background %>% mutate(plate_id="all_plates",block ="all_block", sample_index=sample_name), -->
-<!--     value_column = "log2count", -->
-<!--     comparison_column = parameters$run_var, -->
-<!--     filter_sample_type = "SAMPLE", -->
-<!--     filter_assay_type = "assay" -->
-<!-- ) -->
-
-<!-- create_correlation_table(count_cor$summary , font_size = 12, format = "latex") -->
-
-
-<!-- ``` -->
-
-<!-- \newpage -->
-
-<!-- \section{Per assay NPX correlations} -->
-
-<!-- \subsection{Including all data points} -->
-
-
-<!-- ```{r, NPXcor} -->
-
-<!-- NPX_cor <- correlation_function( -->
-<!--     data = Concordance_count_npx %>% mutate(plate_id="all_plates",block ="all_block", sample_index=sample_name), -->
-<!--     value_column = "NPX", -->
-<!--     comparison_column = parameters$run_var, -->
-<!--     filter_sample_type = "SAMPLE", -->
-<!--     filter_assay_type = "assay" -->
-<!-- ) -->
-
-<!-- create_correlation_table(NPX_cor$summary , font_size = 12, format = "latex") -->
-
-<!-- ``` -->
-
-
-<!-- \subsection{Including only data points above background} -->
-
-
-<!-- ```{r, NPXcor2} -->
-
-<!-- NPX_cor <- correlation_function( -->
-<!--     data = Concordance_count_npx_above_background %>% mutate(plate_id="all_plates",block ="all_block", sample_index=sample_name), -->
-<!--     value_column = "NPX", -->
-<!--     comparison_column = parameters$run_var, -->
-<!--     filter_sample_type = "SAMPLE", -->
-<!--     filter_assay_type = "assay" -->
-<!-- ) -->
-
-<!-- create_correlation_table(NPX_cor$summary , font_size = 12, format = "latex") -->
-
-<!-- ``` -->
-
-
-
-<!-- \newpage -->
-
-<!-- \section{Per assay NPX correlations distribution} -->
-
-
-
-<!-- ```{r, results='asis', echo=FALSE} -->
-<!--   cat("![NPX correlation distribution](", output_dir, "/corrplot.", plot_settings$format, "){width=100%}",sep="") -->
-
-<!-- ``` -->
-
-
 
 
 \newpage

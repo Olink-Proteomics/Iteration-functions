@@ -7,8 +7,8 @@ output:
     latex_engine: xelatex
     keep_tex: true
     includes:
-      in_header: templates/olink_style_windows.tex
-      before_body: templates/olink_title_style_internal_projects.tex
+      in_header: ../../templates/olink_style_windows.tex
+      before_body: ../../templates/olink_title_style_internal_projects.tex
   html_document:
     df_print: paged
 fontsize: 12pt
@@ -28,8 +28,7 @@ knitr::opts_chunk$set(message = F)
 knitr::opts_chunk$set(fig.pos = 'H',tab.pos = "H", out.extra = "")
 knitr::opts_knit$set(eval.after = "fig.cap")
 
-source("mylib.R")
-sapply(list.files("Functions", pattern ="\\.R$", full.names = TRUE), source)
+sapply(list.files("functions", pattern ="\\.R$", full.names = TRUE), source)
 
 loadfonts(device = "win")
 
@@ -41,7 +40,7 @@ options(knitr.table.format = "pandoc")
 
 
 # Load configuration
-config <- yaml::read_yaml("config_instrument.yml")
+config <- yaml::read_yaml("config.yml")
 
 input_data <- config$input_data
 parameters <- config$parameters
@@ -51,8 +50,9 @@ plot_settings <- config$plot_settings
 # Output directory
 product_name <- parameters$Product
 project_name <- parameters$Project
-output_dir <- file.path("Results", product_name, "Instrument_comparison")
-yourdata <- readRDS(input_data)
+background <- parameters$Background
+output_dir <- file.path("../../output", product_name, "Instrument_comparison")
+yourdata <- readRDS(paste0("../../",input_data))
 matrix_types <- unique(yourdata[[as.character(sym(parameters$matrix_column))]] )
 
 
@@ -64,6 +64,8 @@ matrix_types <- unique(yourdata[[as.character(sym(parameters$matrix_column))]] )
 
 Product :  `r product_name`   
 Project: `r project_name`   
+Background: `r background`   
+
 
 \newpage
 

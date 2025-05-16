@@ -2,22 +2,22 @@
 ######################
 #
 # Source required libraries and functions
-sapply(list.files("../functions", pattern = "\\.R$", full.names = TRUE), source)
+sapply(list.files("functions", pattern = "\\.R$", full.names = TRUE), source)
 
 # Load configuration
-config <- yaml::read_yaml("../config/config_instrument.yml")
+config <- yaml::read_yaml("modules/instrument_comparison_module/config.yml")
 
 #generate graphs
 cat("\nGenerating graphics...\n")
-source("generate_graphs_instrument_comparison.R")
+source("modules/instrument_comparison_module/graphics.R")
 
-report_filename <- paste0("Instrument_comparison_Report_", parameters$Product, ".pdf")
+report_filename <- paste0("../../reports/Instrument_comparison_Report_", parameters$Product, ".pdf")
 
 #generate the report
 
 cat(paste("\nRendering the PDF report and saving as", report_filename, "...\n"))
 rmarkdown::render(
-  input = "../RMD/instrument_comparison_Report.rmd", 
+  input = "modules/instrument_comparison_module/report.rmd", 
   params = config, 
   output_file = report_filename,
   output_format = "pdf_document"

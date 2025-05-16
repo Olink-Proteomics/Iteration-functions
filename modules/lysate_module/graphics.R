@@ -3,22 +3,22 @@
 #
 # Source required libraries and functions
 
-sapply(list.files("../functions", pattern = "\\.R$", full.names = TRUE), source)
+sapply(list.files("functions", pattern = "\\.R$", full.names = TRUE), source)
 
 
 # Load configuration
-config <- yaml::read_yaml("../config/config_product.yml")
+config <- yaml::read_yaml("modules/lysate_module/config.yml")
 
 
 # Extract configuration elements
-input_data <- config$input_lysate
+input_data <- config$input_data
 parameters <- config$parameters
 plot_settings <- config$plot_settings
 
 
 # Dynamically construct the output directory
 product_name <- parameters$Product
-output_dir <- file.path("Results", product_name, "Lysate_module")
+output_dir <- file.path("output", product_name, "Lysate_module")
 
 
 # Ensure output directory exists

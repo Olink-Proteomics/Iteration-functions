@@ -2,12 +2,11 @@
 ######################
 #
 # Source required libraries and functions
-source("mylib.R")
-sapply(list.files("Functions", pattern = "\\.R$", full.names = TRUE), source)
+sapply(list.files("functions", pattern = "\\.R$", full.names = TRUE), source)
 
 
 # Load configuration
-config <- yaml::read_yaml("config_instrument.yml")
+config <- yaml::read_yaml("modules/instrument_comparison_module/config.yml")
 
 
 # Extract configuration elements
@@ -18,7 +17,7 @@ plot_settings <- config$plot_settings
 
 # Dynamically construct the output directory
 product_name <- parameters$Product
-output_dir <- file.path("Results", product_name, "Instrument_comparison")
+output_dir <- file.path("output", product_name, "Instrument_comparison")
 
 
 # Ensure output directory exists

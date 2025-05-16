@@ -6,7 +6,7 @@ sapply(list.files("../functions", pattern = "\\.R$", full.names = TRUE), source)
 # 
 # 
 # # Load configuration
- config <- yaml::read_yaml("../config/config_performance.yml")
+ config <- yaml::read_yaml("modules/product_performance_module/config.yml")
 
 
 # Extract configuration elements
@@ -18,7 +18,7 @@ plot_settings <- config$plot_settings
 # Dynamically construct the output directory
 product_name <- parameters$Product
 instrument_name <- parameters$Instrument
-output_dir <- file.path("Results", product_name, instrument_name)
+output_dir <- file.path("output", product_name, instrument_name)
 
 
 # Ensure output directory exists
