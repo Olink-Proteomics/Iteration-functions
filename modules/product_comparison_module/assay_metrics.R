@@ -3,16 +3,16 @@
 ######################
 #
 # Source required libraries and functions
-sapply(list.files("../functions", pattern = "\\.R$", full.names = TRUE), source)
+sapply(list.files("functions", pattern = "\\.R$", full.names = TRUE), source)
 
 
 # Load configuration
-config <- yaml::read_yaml("../config/config_product.yml")
+config <- yaml::read_yaml("modules/product_comparison_module/config.yml")
 
 
 # Extract configuration elements
 input_data <- config$input_data
-lysate_data <-config$input_lysate
+lysate_data <-config$lysate_data
 parameters <- config$parameters
 plot_settings <- config$plot_settings
 eval_cfg <- config$assay_evaluation_criteria
@@ -21,7 +21,7 @@ eval_cfg <- config$assay_evaluation_criteria
 
 # Construct the output directory
 product_name <- parameters$Product
-output_dir <- file.path("Results", product_name, "Assay_metrics")
+output_dir <- file.path("output", product_name, "Assay_metrics")
 
 
 # Ensure output directory exists
@@ -31,7 +31,7 @@ if (!dir.exists(output_dir)) {
 
 
 # Inform the user where the figures will be saved
-message("Data will be saved in: ", output_dir)
+message("Assay spreadsheet will be saved in: ", output_dir)
 
 outliers<-c() # to be added to the config
 
@@ -340,7 +340,7 @@ df_final<-score_assay(
   detectability_thresh = eval_cfg$detectability_thresh,
   sample_range_thresh = eval_cfg$sample_range_thresh,
   pass_score = eval_cfg$pass_score,
-  save_output = F,
+  save_output = TRUE,
   output_dir = output_dir
 )
 

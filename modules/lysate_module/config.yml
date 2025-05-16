@@ -1,6 +1,6 @@
-input_data: "NPX data/iteration2_concordance.rds"
+input_data: "data/iteration2_concordance.rds"
 
-input_lysate: "NPX data/Lysate_runs.rds"          # if lysate runs available
+input_lysate: "data/Lysate_runs.rds"          # if lysate runs available
 
 
 parameters:

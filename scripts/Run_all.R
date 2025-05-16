@@ -1,0 +1,1 @@
+source("R/run_product_comparison.R")

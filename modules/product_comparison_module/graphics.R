@@ -2,11 +2,11 @@
 ######################
 #
 # Source required libraries and functions
-sapply(list.files("../functions", pattern = "\\.R$", full.names = TRUE), source)
+sapply(list.files("functions", pattern = "\\.R$", full.names = TRUE), source)
 
 
 # Load configuration
-config <- yaml::read_yaml("../config/config_product.yml")
+config <- yaml::read_yaml("modules/product_comparison_module/config.yml")
 
 
 # Extract configuration elements
@@ -17,7 +17,7 @@ plot_settings <- config$plot_settings
 
 # Dynamically construct the output directory
 product_name <- parameters$Product
-output_dir <- file.path("Results", product_name, "Product_comparison")
+output_dir <- file.path("output", product_name, "Product_comparison")
 
 
 # Ensure output directory exists
@@ -60,9 +60,9 @@ Concordance_count_npx_above_background<- yourdata %>% filter(if (parameters$Back
   group_by(!!sym(parameters$run_var), olink_id, sample_name,sample_type,assay,block,assay_type,OlinkID, Panel) %>% 
   summarise(log2count=median(log2count, na.rm =TRUE), NPX=median(NPX, na.rm =TRUE), .groups = "drop") 
 # 
- write_rds(Concordance_count_npx_above_background, file = "Concordance_count_npx_above_background.rds")
+ write_rds(Concordance_count_npx_above_background, file = "modules/product_comparison_module/Concordance_count_npx_above_background.rds")
 # 
- write_rds(Concordance_count_npx, file = "Concordance_count_npx.rds")
+ write_rds(Concordance_count_npx, file = "modules/product_comparison_module/Concordance_count_npx.rds")
  
 
 ##Count distribution

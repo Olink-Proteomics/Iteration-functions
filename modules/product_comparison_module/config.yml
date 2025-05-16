@@ -1,0 +1,33 @@
+input_data: "data/iteration2_concordance.rds"
+lysate_data: "data/Lysate_runs.rds"
+
+
+parameters:
+  Product: "Maximus"
+  run_var: "Product"
+  Project: "Iteration 2 runs April 2025"
+  Background: "lod_in_npx"
+  matrix_column: "sample_subtype"
+  npx_var: "pc_normalized_npx"
+  
+
+  generate_assay_spreadsheet: true
+
+
+assay_evaluation_criteria:
+  product1: "Maximus"                     # Product being evaluated
+  product2: "EHT"                         # Product used for evaluation 
+  oid_match: "ht_oid"                     # Column used for reference product
+  corr_thresh: 0.8
+  cv_thresh: 10
+  detectability_thresh: 0.1
+  sample_range_thresh: 1.6
+  pass_score: 2                          # Minimum score needed for "PASS"
+
+
+plot_settings:
+  width: 10
+  height: 10
+  dpi: 300
+  fontsize: 14
+  format: "png"
