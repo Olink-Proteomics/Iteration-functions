@@ -28,60 +28,83 @@
 #' generate_qc_table(data = both0, compare_by = "factor_x", compare_levels = c("Factor1", "Factor2"),
 #'                   qc_var = "sample_id", qc_col = "sample_qc", caption = "QC Status by Factor X")
 #'
-generate_qc_table <- function(data, compare_by, compare_levels = NULL, sample_type_filter = "SAMPLE", qc_var = "sample_id", qc_col = "sample_qc", 
-                              caption = "QC Status of Samples", font_size = 10, format = "latex") {
+generate_qc_table <- function(data, compare_by, compare_levels = NULL,
+                              sample_type_filter = "SAMPLE", qc_var = "sample_id",
+                              qc_col = "sample_qc", caption = "QC Status of Samples",
+                              font_size = 10, format = "latex") {
   # Validate inputs
-  if (!(compare_by %in% colnames(data))) {
-    stop(paste("The column", compare_by, "does not exist in the data frame."))
-  }
-  
-  if (!(qc_col %in% colnames(data))) {
-    stop(paste("The QC column", qc_col, "does not exist in the data frame."))
-  }
-  
-  if (!(qc_var %in% colnames(data))) {
-    stop(paste("The QC variable", qc_var, "does not exist in the data frame."))
-  }
+  if (!(compare_by %in% colnames(data))) stop(paste("The column", compare_by, "does not exist in the data frame."))
+  if (!(qc_col %in% colnames(data))) stop(paste("The QC column", qc_col, "does not exist in the data frame."))
+  if (!(qc_var %in% colnames(data))) stop(paste("The QC variable", qc_var, "does not exist in the data frame."))
   
   
-  # If compare_levels is NULL, use all unique levels from compare_by
+  # Set default compare_levels
   if (is.null(compare_levels)) {
     compare_levels <- unique(data[[compare_by]])
   }
   
-  # Ensure all specified levels are present in the data
-  actual_levels <- unique(data[[compare_by]])
-  missing_levels <- setdiff(compare_levels, actual_levels)
-  if (length(missing_levels) > 0) {
-    stop(paste("The following levels are missing in the data:", paste(missing_levels, collapse = ", ")))
-  }
   
-  # Filter and prepare the data
-  summary_table <- data %>%
-    filter(sample_type == sample_type_filter, !!sym(compare_by) %in% compare_levels) %>%
-    distinct(Block = block, SampleID = !!sym(qc_var), PlateID = plate_id, CompareBy = !!sym(compare_by), QC = !!sym(qc_col)) %>%
-    group_by(Block, PlateID, CompareBy) %>%
-    count(QC) %>%
-    pivot_wider(names_from = CompareBy, values_from = n, values_fill = 0) %>%
-    pivot_wider(names_from = QC, values_from = all_of(compare_levels), values_fill = 0)
+  # Filter and prepare data
+  filtered_data <- data %>%
+    filter(sample_type == sample_type_filter,
+           !!sym(compare_by) %in% compare_levels) %>%
+    distinct(Block = block, SampleID = !!sym(qc_var), PlateID = plate_id,
+             CompareBy = !!sym(compare_by), QC = !!sym(qc_col))
   
-  # Dynamically generate column names
-  qc_statuses <- unique(data[[qc_col]])
-  col_names <- c("Block", "Plate", rep(qc_statuses, length(compare_levels)))
-  col_names <- col_names[1:ncol(summary_table)]  # Ensure correct number of column names
   
-  # Create headers for the LaTeX or HTML table
-  header_labels <- c(" " = 2, setNames(rep(length(qc_statuses), length(compare_levels)), compare_levels))
+  # Count and reshape
+  summary_counts <- filtered_data %>%
+    count(Block, PlateID, CompareBy, QC, name = "Count") %>%
+    mutate(Column = paste(CompareBy, QC, sep = "_")) %>%
+    select(-CompareBy, -QC) %>%
+    pivot_wider(names_from = Column, values_from = Count, values_fill = 0)
   
-  # Generate and format the table
-  table <- kbl(summary_table, format = format, caption = caption, col.names = col_names, position = "!h") %>%
+  
+  # Get actual column order based on present combinations
+  all_columns <- colnames(summary_counts)
+  fixed_cols <- c("Block", "PlateID")
+  data_cols <- setdiff(all_columns, fixed_cols)
+  
+  
+  # Reorder columns: group by compare level first
+  split_parts <- strsplit(data_cols, "_")
+  rep_order <- compare_levels
+  status_order <- sort(unique(filtered_data$QC))
+  
+  
+  # Build correct order
+  expected_order <- unlist(lapply(rep_order, function(rep) {
+    paste(rep, status_order, sep = "_")
+  }))
+  ordered_cols <- intersect(expected_order, data_cols)
+  
+  
+  # Final column order
+  summary_counts <- summary_counts[, c(fixed_cols, ordered_cols)]
+  
+  
+  # Friendly column names
+  friendly_names <- colnames(summary_counts)
+  friendly_names[1:2] <- c("Block", "Plate")
+  friendly_names[-c(1,2)] <- gsub("_", " ", friendly_names[-c(1,2)])
+  
+  
+  # Build header: first level = Rep names, second level = status labels
+  rep_names <- gsub(" .*$", "", friendly_names[-c(1,2)])  # e.g., "Rep1 PASS" -> "Rep1"
+  rep_rle <- rle(rep_names)
+  top_header <- c(" " = 2, setNames(rep_rle$lengths, rep_rle$values))
+  
+  
+  # Now build the table
+  table <- kbl(summary_counts, format = format, caption = caption, col.names = friendly_names, position = "!h") %>%
     kable_classic(full_width = FALSE) %>%
-    add_header_above(header_labels)
+    add_header_above(top_header)
   
-  # Add font size to the table
+  
   if (!is.null(font_size)) {
     table <- kable_styling(table, font_size = font_size)
   }
+  
   
   return(table)
 }

@@ -37,7 +37,7 @@
 
 
 
-create_correlation_table <- function(cor_summary, format = "latex", caption = "Summary of log2count correlations per assay", font_size = 8) {
+create_correlation_table <- function(cor_summary, format = "latex", caption = "Summary of correlations per assay", font_size = 8) {
   library(dplyr)
   library(tidyr)
   library(knitr)

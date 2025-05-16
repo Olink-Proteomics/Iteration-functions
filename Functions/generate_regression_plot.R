@@ -58,7 +58,7 @@ generate_regression_plot <- function(data, x_var, y_var, reg_var, wide_var, outp
   
   # Create the regression plot
   regression_plot <- temp %>% 
-    ggplot(aes_string(y = y_var, x = x_var, color = "sample_type")) +
+    ggplot(aes_string(y = y_var, x = x_var, color = "block")) +
     geom_point(size = 1, alpha = 0.5, na.rm = TRUE) +
     geom_smooth(aes(color = NULL), se = TRUE, method = "lm", formula = y ~ x,
                 na.rm = TRUE, level = 0.95, color = "Black") +
