@@ -1,0 +1,21 @@
+input_data: "Product_comp.parquet"          # Input data file path
+
+
+parameters:
+  Product: "ProjectA"
+  run_var: "Product"                      # Column for comparing
+  Project: "Iteration runs April 2025"    # where does the data come from
+  Background: "detection"
+  matrix_column: "matrix"
+  npx_var: "pc_normalized_npx"
+  
+
+  
+
+plot_settings:
+ width: 10                              # Width of the plots
+ height: 10                             # Height of the plots
+ dpi: 300                               # DPI for plot saving
+ fontsize: 14                           # text font size
+ format: "png"                          # format of the figures
+
