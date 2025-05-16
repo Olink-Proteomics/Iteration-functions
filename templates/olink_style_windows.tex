@@ -1,0 +1,115 @@
+\usepackage{xcolor}
+%\usepackage{fontenc} % not required when xelatex is used
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{tikz} 
+\usepackage{hyperref}
+\usepackage{float} % Force figure position and set default alignment
+\usepackage{booktabs}
+\usepackage{setspace} % adjust line spacing
+\usetikzlibrary{calc} % used for calculating coordinates in tikz
+\usepackage{fontspec} % makes it possible to import Swedish Gothic
+\usepackage{sectsty} % change color of sections
+\usepackage{caption} % change properties of the captions
+
+%OBS!:Change path for Windows
+\providecommand{\olinkgraphicspath}{Template_Figures}
+
+% Set Swedish Gothic as main font with the semi-bold version corresponding to bold text
+\setmainfont{SwedishGothic}[
+  Path = C:/Windows/Fonts/, % Use this line if you installed the fonts as .ttf
+  %Extension = .otf, % Use this line if you installed the fonts as .otf
+  UprightFont = *-Regular,
+  BoldFont = *-SemiBold,
+  ItalicFont = *-RegularItalic,
+  BoldItalicFont = *-SemiBoldItalic
+]
+
+% Add Swedish Gothic Thin
+\newfontfamily{\SwedishGothicThin}{SwedishGothic}[
+  Path = C:/Windows/Fonts/, % Use this line if you installed the fonts as .ttf
+  %Extension = .otf, % Use this line if you installed the fonts as .otf
+  UprightFont = *-Thin
+]
+
+% Primary colors
+\definecolor{discover_blue}{HTML}{00559E}
+\definecolor{focus_blue}{HTML}{A2D9F5}
+\definecolor{target_green}{HTML}{077183}
+% Secondary colors
+\definecolor{olink_red}{HTML}{FE1F04}
+\definecolor{olink_pink}{HTML}{FF51B8}
+\definecolor{olink_yellow}{HTML}{FFC700}
+% Grey color scale
+\definecolor{olink_almost_black}{HTML}{111111}
+\definecolor{olink_dark_grey}{HTML}{67707B}
+\definecolor{olink_grey}{HTML}{AAB1B9}
+\definecolor{olink_light_grey}{HTML}{D3D7DA}
+\definecolor{olink_off_white}{HTML}{FEFEFE}
+
+\makeatletter
+% Ensure figures are centered by default
+\g@addto@macro\@floatboxreset\centering
+% Line brake after level 4 header and set styling
+\renewcommand\paragraph{%%
+  \@startsection{paragraph}%%                        name                
+                {4}%%                                level               
+                {\z@}%%                              indentation (=0pt)        
+                {1ex \@plus1ex \@minus.2ex}%%        beforeskip
+                {2pt}%%                              vertical afterskip
+                {\normalfont\normalsize\color{discover_blue}}}%% style
+\makeatother
+
+% Force float figure position
+\floatplacement{figure}{H}
+
+% Change label font to semi-bold for figures
+\captionsetup[figure]{
+  labelfont=bf,
+  textfont=normalfont,
+  skip=2pt}
+
+% Change label font to semi-bold for tables
+\captionsetup[table]{
+  labelfont=bf,
+  textfont=normalfont}
+
+% Sets the default text color
+\color{black!70!}
+
+% Set color and size of sections and subsections
+\sectionfont{\LARGE\normalfont\color{discover_blue}}
+\subsectionfont{\Large\normalfont\color{discover_blue}}
+\subsubsectionfont{\large\normalfont\color{discover_blue}}
+
+%\setlength{\headheight}{46pt}
+
+\geometry{includeheadfoot, top=1.27cm, bottom=1cm, left=2cm, right=2cm}
+\AtBeginDocument{\let\maketitle\relax}
+
+%Headerstyle for TOC (front page and table of contents page)
+\fancypagestyle{olink_header_toc}{%
+\fancyhf{}
+%\fancyhead[R]{\rule{.5\textwidth}{4\baselineskip}}
+%\fancyhead[R]{\includegraphics[width=4cm]{\olinkgraphicspath/olink logo 2017.eps}}
+\pagenumbering{gobble}
+\fancyfoot[R]{\textcolor{olink_almost_black}{\thepage}}
+\renewcommand{\headrulewidth}{0pt}  
+%\renewcommand{\headrule}{\hbox to\headwidth{\color{olink_green}\leaders\hrule height \headrulewidth\hfill}}
+\renewcommand{\footrulewidth}{0pt}
+}
+
+
+%Headerstyle (the rest of the document)
+\fancypagestyle{olink_header}{%
+\fancyhf{}
+%\fancyhead[R]{\rule{.5\textwidth}{4\baselineskip}}
+%\fancyhead[R]{\includegraphics[width=4cm]{\olinkgraphicspath/olink logo 2017.eps}}
+\pagenumbering{arabic}
+\fancyfoot[R]{\textcolor{olink_almost_black}{\thepage}}
+\renewcommand{\headrulewidth}{0pt}  
+%\renewcommand{\headrule}{\hbox to\headwidth{\color{olink_green}\leaders\hrule height \headrulewidth\hfill}}
+\renewcommand{\footrulewidth}{0pt}
+}

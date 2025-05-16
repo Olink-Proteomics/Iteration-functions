@@ -1,0 +1,62 @@
+%Titlepage
+
+\makeatletter
+\newcommand*\makeolinktitle{%
+\newpage
+\thispagestyle{empty}
+  \begin{tikzpicture}[remember picture, overlay]{background}
+    \draw[draw=discover_blue, fill=discover_blue] (current page.north west) rectangle
+          ++(\paperwidth,-4.3in);
+    
+    \node[anchor=north west, inner sep=0pt] at ($(current page.north west)+(0.8in,-1.0in)$)
+              {\includegraphics[width=0.35\linewidth]{\olinkgraphicspath/Olink Logotype Wordmark White.eps}};
+    
+    \node[anchor=west, inner sep=0pt, text width=\textwidth] at ($(current page.north west)+(0.8in,-3.05in)$){
+      \fontsize{40}{45}\selectfont
+      \textcolor{olink_off_white}{\SwedishGothicThin \@title}};
+    
+    \node[anchor=center, inner sep=0pt] at ($(current page.center)+(0in,-4.3)$){
+      \setstretch{2.0}
+      \textcolor{olink_dark_grey}{
+        \begin{minipage}[t]{0.48\textwidth}
+          \fontsize{15}{17}
+            REPRESENTATIVE \\
+            DATE    
+          \end{minipage}
+          \hskip 0.2in
+        \begin{minipage}[t]{0.48\textwidth}
+          \fontsize{15}{17}
+          \@author \\   
+            \today
+        \end{minipage}}};
+  \end{tikzpicture}
+    
+  \clearpage
+  }
+\makeatother
+
+
+
+% Our offer page
+% (I do not think this is used anywhere)
+\newcommand*\makeolinkoffer{%
+\newpage
+\thispagestyle{empty}
+\newgeometry{top=2cm} 
+ 
+\centering
+\fontsize{40}{45}  
+\selectfont  
+Our Unique Offer
+
+ \vskip 0.7in
+             
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.9\linewidth]{\olinkgraphicspath/backside.eps}
+\end{figure}
+
+
+\clearpage
+\restoregeometry 
+}
