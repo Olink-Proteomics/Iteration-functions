@@ -43,7 +43,7 @@ yourdata <- read_rds(input_data) %>% mutate(NPX= !!rlang::sym(parameters$npx_var
 
 #Detectability
 
-##Maximus detectability based on all samples
+##Maximus detectability based on all samples for each matrix in the iteration runs
 # Get unique matrix types
 
 matrix_types <- unique((yourdata %>% filter(sample_type=="SAMPLE"))[[as.character(sym(parameters$matrix_column))]] )
@@ -133,6 +133,94 @@ Detectability_concordance <- reduce(Detectability_list,
 
 #"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""#
 
+lysate_data <- read_rds(lysate_data) %>% mutate(NPX= !!rlang::sym(parameters$npx_var)) %>% # some olink_analyze functions need NPX
+  filter(sample_qc=="PASS", !(sample_id %in% outliers))  
+
+
+
+## Cell lysate detectability from the lysate runs for both products
+cell_lysate <- filter(lysate_data,sample_subtype=="cell_lysate")
+products <- unique(cell_lysate[[parameters$run_var]])
+
+detectability_list <-NULL
+
+# Loop over each product
+Detectability_list <- map(products, function(prod) {
+  
+  df_filtered <- cell_lysate %>%
+    filter(!!sym(parameters$run_var) == prod)
+  
+  if (nrow(df_filtered) == 0) return(NULL)
+  
+  
+  # Run detectability function
+  detectability_data <- aggregate_detectability(
+    df = df_filtered,
+    sample_name = "sample_name",
+    comp_var = parameters$run_var,
+    run_var = "run_id",
+    npx = parameters$npx_var,
+    background = parameters$Background,
+  ) %>% select(-assay)
+  
+  
+  # Rename the Detectability column to include just the product
+  new_col_name <- paste0("detectability_cell_lysate_", prod)
+  detectability_data <- detectability_data %>%
+    rename(!!new_col_name := Detectability) %>% select(-parameters$run_var)
+  
+  
+  return(detectability_data)
+})
+
+Detectability_cell_lysate <- reduce(Detectability_list, 
+                                    full_join, by= c("olink_id", "block"))  
+
+#"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""#
+
+
+## Cell lysate detectability from the lysate runs for both products
+tissue_lysate <- filter(lysate_data,sample_subtype=="tissue_lysate")
+products <- unique(tissue_lysate[[parameters$run_var]])
+
+detectability_list <-NULL
+
+# Loop over each product
+Detectability_list <- map(products, function(prod) {
+  
+  df_filtered <- tissue_lysate %>%
+    filter(!!sym(parameters$run_var) == prod)
+  
+  if (nrow(df_filtered) == 0) return(NULL)
+  
+  
+  # Run detectability function
+  detectability_data <- aggregate_detectability(
+    df = df_filtered,
+    sample_name = "sample_name",
+    comp_var = parameters$run_var,
+    run_var = "run_id",
+    npx = parameters$npx_var,
+    background = parameters$Background,
+  ) %>% select(-assay)
+  
+  
+  # Rename the Detectability column to include just the product
+  new_col_name <- paste0("detectability_tissue_lysate_", prod)
+  detectability_data <- detectability_data %>%
+    rename(!!new_col_name := Detectability) %>% select(-parameters$run_var)
+  
+  
+  return(detectability_data)
+})
+
+Detectability_tissue_lysate <- reduce(Detectability_list, 
+                                    full_join, by= c("olink_id", "block"))  
+detectability_lysate <-Detectability_tissue_lysate %>% left_join(Detectability_cell_lysate, by=c("olink_id", "block"))
+
+#"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""#
+
+
 
 #calculate CV, based on Sample controls
 
@@ -161,41 +249,68 @@ healthypool_cv_data <- cv_data %>% rename(intra_cv_concordance_healthy_pool=intr
 
 #calculate CV, based on Lysate replicates
 
-
 #CV based on tissue lysate replicates
-lysate_data <- read_rds(lysate_data) %>% mutate(NPX= !!rlang::sym(parameters$npx_var)) %>% # some olink_analyze functions need NPX
-  filter(sample_qc=="PASS", !(sample_id %in% outliers))  
+#pool1
 
-cv_lysate_tissue<-aggregate_cv(lysate_data,
+
+cv_lysate_tissue_pool1<-aggregate_cv(lysate_data,
                                "NPX", parameters$Background,
                                comp_var="run_id", filter_col = "sample_label", 
-                               filter_value =  "Tissue_Lysate_replicates",
+                               filter_value =  "Tissue_Lysate_replicates_pool1",
                                additionnal_var= parameters$run_var) %>% 
-   rename(intra_cv_lysate_tissue=intra_CV,inter_plate_cv_lysate_tissue= inter_plate_CV, inter_run_cv_lysate_tissue=inter_run_CV ) %>% 
-  pivot_wider(names_from = parameters$run_var, values_from = intra_cv_lysate_tissue :inter_run_cv_lysate_tissue) %>% 
+   rename(intra_cv_lysate_tissue_pool1=intra_CV ) %>% 
+  pivot_wider(names_from = parameters$run_var, values_from = intra_cv_lysate_tissue_pool1) %>% 
   select(-plate_id)
+
+
+#pool2
+
+cv_lysate_tissue_pool2<-aggregate_cv(lysate_data,
+                                     "NPX", parameters$Background,
+                                     comp_var="run_id", filter_col = "sample_label", 
+                                     filter_value =  "Tissue_Lysate_replicates_pool2",
+                                     additionnal_var= parameters$run_var) %>% 
+  rename(intra_cv_lysate_tissue_pool2=intra_CV) %>% 
+  pivot_wider(names_from = parameters$run_var, values_from = intra_cv_lysate_tissue_pool2) %>% 
+  select(-plate_id)
+
+
+lysate_tissue_cv_data <- cv_lysate_tissue_pool1 %>% left_join(cv_lysate_tissue_pool2, by=c("olink_id"))
 
 
 #CV based on cell lysate replicates
 
+#pool1
 
 
-cv_lysate_cell<-aggregate_cv(lysate_data, "NPX",
+cv_lysate_cell_pool1<-aggregate_cv(lysate_data, "NPX",
                              parameters$Background,
                              comp_var="run_id", filter_col = "sample_label",
-                             filter_value =  "Cell_Lysate_replicates", 
+                             filter_value =  "Cell_Lysate_replicates_pool1", 
                              additionnal_var=parameters$run_var)%>% 
-  rename(intra_cv_lysate_cell=intra_CV,inter_plate_cv_lysate_cell= inter_plate_CV, inter_run_cv_lysate_cell=inter_run_CV ) %>% 
-  pivot_wider(names_from = parameters$run_var, values_from = intra_cv_lysate_cell :inter_run_cv_lysate_cell) %>% 
+  rename(intra_cv_lysate_cell_pool1=intra_CV ) %>% 
+  pivot_wider(names_from = parameters$run_var, values_from = intra_cv_lysate_cell_pool1) %>% 
   select(-plate_id)
 
 
+#pool2
 
-lysate_cv_data <- cv_lysate_tissue %>% left_join(cv_lysate_cell, by=c("olink_id"))
+
+cv_lysate_cell_pool2<-aggregate_cv(lysate_data, "NPX",
+                                   parameters$Background,
+                                   comp_var="run_id", filter_col = "sample_label",
+                                   filter_value =  "Cell_Lysate_replicates_pool2", 
+                                   additionnal_var=parameters$run_var)%>% 
+  rename(intra_cv_lysate_cell_pool2=intra_CV ) %>% 
+  pivot_wider(names_from = parameters$run_var, values_from = intra_cv_lysate_cell_pool2) %>% 
+  select(-plate_id)
+
+lysate_cell_cv_data <- cv_lysate_cell_pool1 %>% left_join(cv_lysate_cell_pool2, by=c("olink_id"))
 
 #
 #
 #
+lysate_cv_data <- lysate_tissue_cv_data %>% left_join(lysate_cell_cv_data, by=c("olink_id"))
 
 
 #Calculate NPX correlations
@@ -321,6 +436,7 @@ df<-NULL
 assay_info <- yourdata %>% filter(assay_type=="assay") %>%  distinct(olink_id, ht_oid,block)
 
 detect<-Detectability_all %>% left_join(Detectability_concordance, by=c("olink_id",  "block")) %>% 
+  left_join(detectability_lysate,by=c("olink_id",  "block") ) %>% 
   select(-block)
 
 df<-reduce(list(assay_info, detect, SC_cv_data, healthypool_cv_data,lysate_cv_data, Sample_range_concordance,Sample_range_lysate,SN, #across_run_corr
