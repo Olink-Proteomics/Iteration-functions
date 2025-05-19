@@ -6,7 +6,7 @@ sapply(list.files("functions", pattern = "\\.R$", full.names = TRUE), source)
 
 
 # Load configuration
-config <- yaml::read_yaml("modules/instrument_comparison_module/config.yml")
+#config <- yaml::read_yaml("modules/instrument_comparison_module/config.yml")
 
 
 # Extract configuration elements

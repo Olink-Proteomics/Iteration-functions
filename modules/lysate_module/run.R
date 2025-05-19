@@ -5,11 +5,15 @@
 sapply(list.files("functions", pattern = "\\.R$", full.names = TRUE), source)
 
 # Load configuration
-config <- yaml::read_yaml("modules/lysate_module/config.yml")
+
+# Get path to config file passed by the Shiny app
+args <- commandArgs(trailingOnly = TRUE)
+config_path <- if (length(args) > 0 && file.exists(args[1])) args[1] else "modules/instrument_comparison_module/config.yml"
+config <- yaml::read_yaml(config_path)
 
 #generate graphs
 cat("\nGenerating graphics...\n")
-source("modules/lysate_module/graphics.R")
+source("modules/lysate_module/graphics.R", local = TRUE)
 
 report_filename <- paste0("../../reports/Lysate_module_Report_", parameters$Product, ".pdf")
 

@@ -40,7 +40,7 @@ options(knitr.table.format = "pandoc")
 
 
 # Load configuration
-config <- yaml::read_yaml("config.yml")
+#config <- yaml::read_yaml("config.yml")
 
 input_data <- config$input_data
 parameters <- config$parameters

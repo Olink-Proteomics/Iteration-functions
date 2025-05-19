@@ -28,7 +28,7 @@ knitr::opts_chunk$set(message = F)
 knitr::opts_chunk$set(fig.pos = 'H',tab.pos = "H", out.extra = "")
 knitr::opts_knit$set(eval.after = "fig.cap")
 
-sapply(list.files("functions", pattern ="\\.R$", full.names = TRUE), source)
+sapply(list.files("../../functions", pattern ="\\.R$", full.names = TRUE), source)
 
 loadfonts(device = "win")
 
@@ -40,7 +40,7 @@ options(knitr.table.format = "pandoc")
 
 
 # Load configuration
-config <- yaml::read_yaml("config.yml")
+#config <- yaml::read_yaml("config.yml")
 
 input_data <- config$input_data
 parameters <- config$parameters
@@ -50,6 +50,7 @@ plot_settings <- config$plot_settings
 # Output directory
 product_name <- parameters$Product
 project_name <- parameters$Project
+background <- parameters$Background
 output_dir <- file.path("../../output", product_name, "Lysate_module")
 outliers<-c()
 yourdata <- read_rds(paste0("../../",input_data)) %>% mutate(NPX= !!rlang::sym(parameters$npx_var)) %>% # some olink_analyse functions need NPX
@@ -66,6 +67,7 @@ matrix_types <- unique(yourdata[[as.character(sym(parameters$matrix_column))]] )
 
 Product :  `r product_name`   
 Project: `r project_name`   
+Background: `r background`
 
 
 \newpage
@@ -74,15 +76,15 @@ Project: `r project_name`
 Replicates are different on different plates, interplate CV can not be calculated.  
 For each product, cv values from all replicate runs were aggregated to one single value using the median.  
 
-\subsection{CV based on tissue lysate replicates}
+\subsection{CV based on tissue lysate replicates pool 1}
 
 
 ```{r}
-cv_data<-aggregate_cv(yourdata, "NPX", parameters$Background, comp_var="run_id", filter_col = "sample_label", filter_value =  "Tissue_Lysate_replicates", additionnal_var=c(parameters$run_var,"block"))
+cv_data<-aggregate_cv(yourdata, "NPX", parameters$Background, comp_var="run_id", filter_col = "sample_label", filter_value =  "Tissue_Lysate_replicates_pool1", additionnal_var=c(parameters$run_var,"block"))
 
 cv_data %>% group_by(!!sym(parameters$run_var)) %>% summarise(Median_intraCV=median(intra_CV,na.rm=TRUE),
                                                  Median_inter_runCV=median(inter_run_CV,na.rm=TRUE), .groups = "drop") %>%  mutate(across(where(is.numeric), ~ round(., digits = 2))) %>% 
-kbl(position = "!h",format="latex", booktabs = T, caption = "Overall Median of CV based on Tissue Lysate replicates") %>% kable_styling(font_size = 12,full_width = FALSE)
+kbl(position = "!h",format="latex", booktabs = T, caption = "Overall Median of CV based on Tissue Lysate replicates pool 1") %>% kable_styling(font_size = 12,full_width = FALSE)
 
 ```
 
@@ -94,7 +96,7 @@ cv_data %>% group_by(!!sym(parameters$run_var),block) %>% summarise(Mean_intraCV
                                                                              Median_intraCV=median(intra_CV,na.rm=TRUE),
                                                                              Mean_inter_runCV=mean(inter_run_CV, na.rm = TRUE),
                                                                              Median_inter_runCV=median(inter_run_CV,na.rm=TRUE), .groups = "drop") %>%  mutate(across(where(is.numeric), ~ round(., digits = 2))) %>% 
-kbl(position = "!h",format="latex", booktabs = T, caption = "Mean and Median of CV based on Tissue Lysate replicates, per block") %>% kable_styling(font_size = 12,full_width = FALSE)
+kbl(position = "!h",format="latex", booktabs = T, caption = "Mean and Median of CV based on Tissue Lysate replicates pool 1, per block") %>% kable_styling(font_size = 12,full_width = FALSE)
 
 ```
 
@@ -103,20 +105,55 @@ kbl(position = "!h",format="latex", booktabs = T, caption = "Mean and Median of 
 
 
 ```{r, results='asis', echo=FALSE}
-  cat("![Distribution of intraCV based on tissue lysate replicates](", output_dir, "/violin_intra_tissue.", plot_settings$format, "){width=100%}",sep="")
+  cat("![Distribution of intraCV based on tissue lysate replicates pool 1](", output_dir, "/violin_intra_tissue_pool1.", plot_settings$format, "){width=100%}",sep="")
 
 ```
 
-\newpage
-\subsection{CV based on cell lysate replicates}
+
+\subsection{CV based on tissue lysate replicates pool 2}
 
 
 ```{r}
-cv_data<-aggregate_cv(yourdata, "NPX", parameters$Background, comp_var="run_id", filter_col = "sample_label", filter_value =  "Cell_Lysate_replicates", additionnal_var=c(parameters$run_var,"block"))
+cv_data<-aggregate_cv(yourdata, "NPX", parameters$Background, comp_var="run_id", filter_col = "sample_label", filter_value =  "Tissue_Lysate_replicates_pool2", additionnal_var=c(parameters$run_var,"block"))
 
 cv_data %>% group_by(!!sym(parameters$run_var)) %>% summarise(Median_intraCV=median(intra_CV,na.rm=TRUE),
                                                  Median_inter_runCV=median(inter_run_CV,na.rm=TRUE), .groups = "drop") %>%  mutate(across(where(is.numeric), ~ round(., digits = 2))) %>% 
-kbl(position = "!h",format="latex", booktabs = T, caption = "Overall Median of CV based on Cell Lysate replicates") %>% kable_styling(font_size = 12,full_width = FALSE)
+kbl(position = "!h",format="latex", booktabs = T, caption = "Overall Median of CV based on Tissue Lysate replicates pool 2") %>% kable_styling(font_size = 12,full_width = FALSE)
+
+```
+
+
+
+```{r}
+
+cv_data %>% group_by(!!sym(parameters$run_var),block) %>% summarise(Mean_intraCV=mean(intra_CV, na.rm = TRUE),
+                                                                             Median_intraCV=median(intra_CV,na.rm=TRUE),
+                                                                             Mean_inter_runCV=mean(inter_run_CV, na.rm = TRUE),
+                                                                             Median_inter_runCV=median(inter_run_CV,na.rm=TRUE), .groups = "drop") %>%  mutate(across(where(is.numeric), ~ round(., digits = 2))) %>% 
+kbl(position = "!h",format="latex", booktabs = T, caption = "Mean and Median of CV based on Tissue Lysate replicates pool 2, per block") %>% kable_styling(font_size = 12,full_width = FALSE)
+
+```
+
+
+\newpage
+
+
+```{r, results='asis', echo=FALSE}
+  cat("![Distribution of intraCV based on tissue lysate replicates pool 2](", output_dir, "/violin_intra_tissue_pool2.", plot_settings$format, "){width=100%}",sep="")
+
+```
+
+
+\newpage
+\subsection{CV based on cell lysate replicates pool 1}
+
+
+```{r}
+cv_data<-aggregate_cv(yourdata, "NPX", parameters$Background, comp_var="run_id", filter_col = "sample_label", filter_value =  "Cell_Lysate_replicates_pool1", additionnal_var=c(parameters$run_var,"block"))
+
+cv_data %>% group_by(!!sym(parameters$run_var)) %>% summarise(Median_intraCV=median(intra_CV,na.rm=TRUE),
+                                                 Median_inter_runCV=median(inter_run_CV,na.rm=TRUE), .groups = "drop") %>%  mutate(across(where(is.numeric), ~ round(., digits = 2))) %>% 
+kbl(position = "!h",format="latex", booktabs = T, caption = "Overall Median of CV based on Cell Lysate replicates pool 1") %>% kable_styling(font_size = 12,full_width = FALSE)
 
 ```
 
@@ -129,7 +166,7 @@ cv_data %>% group_by(!!sym(parameters$run_var),block) %>% summarise(Mean_intraCV
                                                                              Median_intraCV=median(intra_CV,na.rm=TRUE),
                                                                              Mean_inter_runCV=mean(inter_run_CV, na.rm = TRUE),
                                                                              Median_inter_runCV=median(inter_run_CV,na.rm=TRUE), .groups = "drop") %>%  mutate(across(where(is.numeric), ~ round(., digits = 2))) %>% 
-kbl(position = "!h",format="latex", booktabs = T, caption = "Mean and Median of CV based on Cell Lysate replicates,  per block") %>% kable_styling(font_size = 12,full_width = FALSE)
+kbl(position = "!h",format="latex", booktabs = T, caption = "Mean and Median of CV based on Cell Lysate replicates pool 1,  per block") %>% kable_styling(font_size = 12,full_width = FALSE)
 
 ```
 
@@ -139,10 +176,47 @@ kbl(position = "!h",format="latex", booktabs = T, caption = "Mean and Median of 
 
 
 ```{r, results='asis', echo=FALSE}
-  cat("![Distribution of intraCV based on tissue lysate replicates](", output_dir, "/violin_intra_cell.", plot_settings$format, "){width=100%}",sep="")
+  cat("![Distribution of intraCV based on tissue lysate replicates pool 1](", output_dir, "/violin_intra_cell_pool1.", plot_settings$format, "){width=100%}",sep="")
 
 ```
 
+
+
+\newpage
+\subsection{CV based on cell lysate replicates pool 2}
+
+
+```{r}
+cv_data<-aggregate_cv(yourdata, "NPX", parameters$Background, comp_var="run_id", filter_col = "sample_label", filter_value =  "Cell_Lysate_replicates_pool2", additionnal_var=c(parameters$run_var,"block"))
+
+cv_data %>% group_by(!!sym(parameters$run_var)) %>% summarise(Median_intraCV=median(intra_CV,na.rm=TRUE),
+                                                 Median_inter_runCV=median(inter_run_CV,na.rm=TRUE), .groups = "drop") %>%  mutate(across(where(is.numeric), ~ round(., digits = 2))) %>% 
+kbl(position = "!h",format="latex", booktabs = T, caption = "Overall Median of CV based on Cell Lysate replicates pool 2") %>% kable_styling(font_size = 12,full_width = FALSE)
+
+```
+
+
+
+```{r}
+
+
+cv_data %>% group_by(!!sym(parameters$run_var),block) %>% summarise(Mean_intraCV=mean(intra_CV, na.rm = TRUE),
+                                                                             Median_intraCV=median(intra_CV,na.rm=TRUE),
+                                                                             Mean_inter_runCV=mean(inter_run_CV, na.rm = TRUE),
+                                                                             Median_inter_runCV=median(inter_run_CV,na.rm=TRUE), .groups = "drop") %>%  mutate(across(where(is.numeric), ~ round(., digits = 2))) %>% 
+kbl(position = "!h",format="latex", booktabs = T, caption = "Mean and Median of CV based on Cell Lysate replicates pool 2,  per block") %>% kable_styling(font_size = 12,full_width = FALSE)
+
+```
+
+
+
+\newpage
+
+
+```{r, results='asis', echo=FALSE}
+  cat("![Distribution of intraCV based on tissue lysate replicates pool 2](", output_dir, "/violin_intra_cell_pool2.", plot_settings$format, "){width=100%}",sep="")
+
+```
 
 
 

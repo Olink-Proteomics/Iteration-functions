@@ -5,11 +5,15 @@
 sapply(list.files("functions", pattern = "\\.R$", full.names = TRUE), source)
 
 # Load configuration
-config <- yaml::read_yaml("modules/product_comparison_module/config.yml")
+
+# Get path to config file passed by the Shiny app
+args <- commandArgs(trailingOnly = TRUE)
+config_path <- if (length(args) > 0 && file.exists(args[1])) args[1] else "modules/instrument_comparison_module/config.yml"
+config <- yaml::read_yaml(config_path)
 
 #generate graphs
 cat("\nGenerating graphics...\n")
-source("modules/product_comparison_module/graphics.R")
+source("modules/product_comparison_module/graphics.R", local = TRUE)
 
 report_filename <- paste0("../../reports/Product_comparison_Report_", parameters$Product, ".pdf")
 
@@ -17,7 +21,7 @@ cat("\nGenerating assay spreadsheet...\n")
 
 #generate assay spreadsheet
 if (isTRUE(config$parameters$generate_assay_spreadsheet)) {
-  source("modules/product_comparison_module/assay_metrics.R")  # or whatever script builds the spreadsheet
+  source("modules/product_comparison_module/assay_metrics.R", local = TRUE)  # or whatever script builds the spreadsheet
 }
 
 

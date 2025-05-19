@@ -39,7 +39,7 @@ yourdata <- read_rds(input_data) %>% mutate(NPX= !!rlang::sym(parameters$npx_var
 
 #Intra CV distribution, violin plot 
 
-cv_data<-aggregate_cv(yourdata, "NPX", parameters$Background, comp_var="run_id", filter_col = "sample_label", filter_value =  "Tissue_Lysate_replicates", additionnal_var=c(parameters$run_var,"assay_label") )
+cv_data<-aggregate_cv(yourdata, "NPX", parameters$Background, comp_var="run_id", filter_col = "sample_label", filter_value =  "Tissue_Lysate_replicates_pool1", additionnal_var=c(parameters$run_var,"assay_label") )
 
 
 df<-cv_data %>%select(Product,olink_id,assay_label, intra_CV, plate_id) %>% filter(!is.na(intra_CV)) %>% 
@@ -63,7 +63,7 @@ violin<-ggplot(df, aes(x = reorder(Product, intra_CV, FUN = median), y = intra_C
 
 
 ggsave(
-  file.path(output_dir, paste0("violin_intra_tissue.", plot_settings$format)),
+  file.path(output_dir, paste0("violin_intra_tissue_pool1.", plot_settings$format)),
   plot = violin,
   width = plot_settings$width,
   height = plot_settings$height,
@@ -72,8 +72,39 @@ ggsave(
 )
 
 
+cv_data<-aggregate_cv(yourdata, "NPX", parameters$Background, comp_var="run_id", filter_col = "sample_label", filter_value =  "Tissue_Lysate_replicates_pool2", additionnal_var=c(parameters$run_var,"assay_label") )
 
-cv_data<-aggregate_cv(yourdata, "NPX", parameters$Background, comp_var="run_id", filter_col = "sample_label", filter_value =  "Cell_Lysate_replicates", additionnal_var=c(parameters$run_var,"assay_label") )
+df<-cv_data %>%select(Product,olink_id,assay_label, intra_CV, plate_id) %>% filter(!is.na(intra_CV)) %>% 
+  group_by(Product,olink_id,assay_label) %>% summarise(intra_CV = mean(intra_CV, na.rm = T, .groups ="drop"))
+
+
+
+violin<-ggplot(df, aes(x = reorder(Product, intra_CV, FUN = median), y = intra_CV, fill = assay_label)) +
+  geom_violin(trim = FALSE, scale = "width", alpha = 0.7) +  # Scaled violin
+  geom_boxplot(width = 0.3, fill = "white", outlier.shape = NA, notch = F) +  # Boxplot with notch
+  geom_jitter(shape = 16, position = position_jitter(width = 0.15, height = 0), alpha = 0.3, size = 0.5) +  # Improved jitter
+  
+  scale_fill_manual(values = c( "red", "turquoise", "blue")) +  # Highlight overlapping assays
+  scale_y_continuous(limits = c(0, quantile(df$intra_CV, 0.99))) +  # Remove extreme outliers
+  theme_minimal() +
+  labs(title = "Distribution of Intra-Plate CV by Product",
+       x = "Product (Sorted by Median CV)",
+       y = "Intra-Plate CV",
+       fill = "Assay Type") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels
+
+
+ggsave(
+  file.path(output_dir, paste0("violin_intra_tissue_pool2.", plot_settings$format)),
+  plot = violin,
+  width = plot_settings$width,
+  height = plot_settings$height,
+  bg = "white",
+  dpi = plot_settings$dpi
+)
+
+
+cv_data<-aggregate_cv(yourdata, "NPX", parameters$Background, comp_var="run_id", filter_col = "sample_label", filter_value =  "Cell_Lysate_replicates_pool1", additionnal_var=c(parameters$run_var,"assay_label") )
 
 
 df<-cv_data %>%select(Product,olink_id,assay_label, intra_CV, plate_id) %>% filter(!is.na(intra_CV)) %>% 
@@ -97,13 +128,50 @@ violin<-ggplot(df, aes(x = reorder(Product, intra_CV, FUN = median), y = intra_C
 
 
 ggsave(
-  file.path(output_dir, paste0("violin_intra_cell.", plot_settings$format)),
+  file.path(output_dir, paste0("violin_intra_cell_pool1.", plot_settings$format)),
   plot = violin,
   width = plot_settings$width,
   height = plot_settings$height,
   bg = "white",
   dpi = plot_settings$dpi
 )
+
+
+
+
+cv_data<-aggregate_cv(yourdata, "NPX", parameters$Background, comp_var="run_id",
+                      filter_col = "sample_label", filter_value =  "Cell_Lysate_replicates_pool2", additionnal_var=c(parameters$run_var,"assay_label") )
+
+
+df<-cv_data %>%select(Product,olink_id,assay_label, intra_CV, plate_id) %>% filter(!is.na(intra_CV)) %>% 
+  group_by(Product,olink_id,assay_label) %>% summarise(intra_CV = mean(intra_CV, na.rm = T, .groups ="drop"))
+
+
+
+violin<-ggplot(df, aes(x = reorder(Product, intra_CV, FUN = median), y = intra_CV, fill = assay_label)) +
+  geom_violin(trim = FALSE, scale = "width", alpha = 0.7) +  # Scaled violin
+  geom_boxplot(width = 0.3, fill = "white", outlier.shape = NA, notch = F) +  # Boxplot with notch
+  geom_jitter(shape = 16, position = position_jitter(width = 0.15, height = 0), alpha = 0.3, size = 0.5) +  # Improved jitter
+  
+  scale_fill_manual(values = c( "red", "turquoise", "blue")) +  # Highlight overlapping assays
+  scale_y_continuous(limits = c(0, quantile(df$intra_CV, 0.99))) +  # Remove extreme outliers
+  theme_minimal() +
+  labs(title = "Distribution of Intra-Plate CV by Product",
+       x = "Product (Sorted by Median CV)",
+       y = "Intra-Plate CV",
+       fill = "Assay Type") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels
+
+
+ggsave(
+  file.path(output_dir, paste0("violin_intra_cell_pool2.", plot_settings$format)),
+  plot = violin,
+  width = plot_settings$width,
+  height = plot_settings$height,
+  bg = "white",
+  dpi = plot_settings$dpi
+)
+
 
 
 
